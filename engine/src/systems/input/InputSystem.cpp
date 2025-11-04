@@ -1,9 +1,12 @@
 #include "InputSystem.h"
 
+#include "components/ui/Cursor.h"
+
+InputSystem::InputSystem(Input &input):input(input){}
 
 void InputSystem::setKey(ECSWorld &world, int key, Input::Action action)
 {
-    world.getSingleComponent<Input>().keys[key] = action;
+    input.keys[key] = action;
     for(auto func : _subscribersKey[key][action])
     {
         func();
@@ -12,19 +15,19 @@ void InputSystem::setKey(ECSWorld &world, int key, Input::Action action)
 
 void InputSystem::setMouseButton(ECSWorld &world, int button, Input::Action action)
 {
-    world.getSingleComponent<Input>().mouseButtons[button] = action;
+    input.mouseButtons[button] = action;
     for(auto func : _subscribersMouseButton[button][action])
     {
         func();
     }
 }
 
-void InputSystem::setCursor(ECSWorld &world, glm::uvec2 cursor)
+void InputSystem::setCursor(ECSWorld &world, glm::dvec2 cursor)
 {
-    world.getSingleComponent<Input>().cursor = cursor;
-    //for(auto func : _subscribersCursor)
+    world.getSingleComponent<Cursor>().pos = cursor;
+    for(auto func : _subscribersCursor)
     {
-        //func(cursor);
+        func(cursor);
     }
 }
 
@@ -38,7 +41,7 @@ void InputSystem::mouseButtonSubscribe(int botton, Input::Action action, std::fu
     _subscribersMouseButton[botton][action].push_back(subscriber);
 }
 
-void InputSystem::cursorSubscribe(std::function<void(glm::uvec2)> subscriber)
+void InputSystem::cursorSubscribe(std::function<void(glm::dvec2)> subscriber)
 {
     _subscribersCursor.push_back(subscriber);
 }

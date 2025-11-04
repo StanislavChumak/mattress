@@ -4,6 +4,8 @@
 #include "rapidjson/document.h"
 #include "glm/vec2.hpp"
 
+#include <iostream>
+
 class ResourceManager;
 
 struct Transform {
@@ -13,10 +15,10 @@ struct Transform {
 
     void fromJson(const rapidjson::Value& j, const ResourceManager &resource)
     {
-        position.x = j["pos_x"].GetInt();
-        position.y = j["pos_y"].GetInt();
-        size.x = j["size_x"].GetInt();
-        size.y = j["size_y"].GetInt();
+        position.x = j["pos"].GetArray()[0].GetInt();
+        position.y = j["pos"].GetArray()[1].GetInt();
+        size.x = j["size"].GetArray()[0].GetInt();
+        size.y = j["size"].GetArray()[1].GetInt();
         rotation = j["rotation"].GetFloat();
     }
 };

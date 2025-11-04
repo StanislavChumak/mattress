@@ -14,7 +14,20 @@ struct  Input {
     Action mouseButtons[8];
     bool lastKeys[349];
     bool lastMouseButtons[8];
-    glm::dvec2 cursor;
+
+    Input()
+    {
+        for(int i = 0; i < 349; i++)
+        {
+            keys[i] = Action::HOLD;
+            lastKeys[i] = Action::HOLD;
+        }
+        for(int i = 0; i < 8; i++)
+        {
+            mouseButtons[i] = Action::HOLD;
+            lastMouseButtons[i] = Action::HOLD;
+        }
+    }
 };
 
 #endif

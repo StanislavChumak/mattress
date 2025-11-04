@@ -7,7 +7,7 @@
 #include "glm/vec2.hpp"
 
 struct Window {
-    GLFWwindow *window = nullptr;
+    GLFWwindow *poiter = nullptr;
     glm::uvec2 size;
     const char *name;
     unsigned int scale;

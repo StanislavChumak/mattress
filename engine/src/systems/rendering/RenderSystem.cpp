@@ -1,9 +1,9 @@
 #include "RenderSystem.h"
 
 #include "../../ECSWorld.h"
-#include "../../../include/components/rendering/Camera.h"
-#include "../../../include/components/core/Transform.h"
-#include "../../../include/components/rendering/Sprite.h"
+#include "components/rendering/Camera.h"
+#include "components/core/Transform.h"
+#include "components/rendering/Sprite.h"
 
 #include "glm/mat4x4.hpp"
 #include <glm/gtc/matrix_transform.hpp>

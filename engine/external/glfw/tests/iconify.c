@@ -121,7 +121,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     }
 }
 
-static void window_size_callback(GLFWwindow* window, int width, int height)
+static void windowSizeCallback(GLFWwindow* window, int width, int height)
 {
     printf("%0.2f Window resized to %ix%i\n", glfwGetTime(), width, height);
 }
@@ -262,7 +262,7 @@ int main(int argc, char** argv)
     {
         glfwSetKeyCallback(windows[i], key_callback);
         glfwSetFramebufferSizeCallback(windows[i], framebuffer_size_callback);
-        glfwSetWindowSizeCallback(windows[i], window_size_callback);
+        glfwSetWindowSizeCallback(windows[i], windowSizeCallback);
         glfwSetWindowFocusCallback(windows[i], window_focus_callback);
         glfwSetWindowIconifyCallback(windows[i], window_iconify_callback);
         glfwSetWindowMaximizeCallback(windows[i], window_maximize_callback);

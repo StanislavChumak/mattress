@@ -294,7 +294,7 @@ static void window_pos_callback(GLFWwindow* window, int x, int y)
            counter++, slot->number, glfwGetTime(), x, y);
 }
 
-static void window_size_callback(GLFWwindow* window, int width, int height)
+static void windowSizeCallback(GLFWwindow* window, int width, int height)
 {
     Slot* slot = glfwGetWindowUserPointer(window);
     printf("%08x to %i at %0.3f: Window size: %i %i\n",
@@ -635,7 +635,7 @@ int main(int argc, char** argv)
         glfwSetWindowUserPointer(slots[i].window, slots + i);
 
         glfwSetWindowPosCallback(slots[i].window, window_pos_callback);
-        glfwSetWindowSizeCallback(slots[i].window, window_size_callback);
+        glfwSetWindowSizeCallback(slots[i].window, windowSizeCallback);
         glfwSetFramebufferSizeCallback(slots[i].window, framebuffer_size_callback);
         glfwSetWindowContentScaleCallback(slots[i].window, window_content_scale_callback);
         glfwSetWindowCloseCallback(slots[i].window, window_close_callback);

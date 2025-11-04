@@ -17,11 +17,10 @@
 #include <iostream>
 #endif
 
-ResourceManager::ResourceManager(const std::string &executablePath)
+ResourceManager::ResourceManager()
 {
-    size_t found = executablePath.find_last_of("/\\");
-    _executablePath = executablePath.substr(0, found + 1);
 }
+
 
 ResourceManager::~ResourceManager()
 {
@@ -35,7 +34,13 @@ void ResourceManager::clear()
     _soundsMap.clear();
 }
 
-std::string ResourceManager::get_file_string(const std::string &relativeFilePath)
+void ResourceManager::setExecutablePath(const std::string &executablePath)
+{
+    size_t found = executablePath.find_last_of("/\\");
+    _executablePath = executablePath.substr(0, found + 1);
+}
+
+std::string ResourceManager::getFileString(const std::string &relativeFilePath)
 {
     std::ifstream fileFlow;
     fileFlow.open(_executablePath + relativeFilePath, std::ios::ate | std::ios::binary);
@@ -58,10 +63,10 @@ std::string ResourceManager::get_file_string(const std::string &relativeFilePath
     return std::string(buffer);
 }
 
-ShaderProgram *ResourceManager::load_shaders(const std::string &shaderName, const std::string &vertexPath, const std::string &fragmentPath)
+ShaderProgram *ResourceManager::loadShaders(const std::string &shaderName, const std::string &vertexPath, const std::string &fragmentPath)
 {
-    std::string vertexShaderCode = get_file_string(vertexPath);
-    std::string fragmentShaderCode = get_file_string(fragmentPath);
+    std::string vertexShaderCode = getFileString(vertexPath);
+    std::string fragmentShaderCode = getFileString(fragmentPath);
 
 #   ifndef FLAG_RELEASE
     if (vertexShaderCode.empty())
@@ -92,7 +97,7 @@ ShaderProgram *ResourceManager::load_shaders(const std::string &shaderName, cons
     return newShader;
 }
 
-ShaderProgram *ResourceManager::get_shader_program(const std::string &shaderName) const
+ShaderProgram *ResourceManager::getShaderProgram(const std::string &shaderName) const
 {
     ShaderProgramsMap::const_iterator iter = _shaderProgramsMap.find(shaderName);
 
@@ -107,7 +112,7 @@ ShaderProgram *ResourceManager::get_shader_program(const std::string &shaderName
     return iter->second.get();
 }
 
-Texture2D *ResourceManager::load_texture2D(const std::string &textureName, const std::string &texturePath, const unsigned char &number)
+Texture2D *ResourceManager::loadTexture2D(const std::string &textureName, const std::string &texturePath, const unsigned char &number)
 {
     int channels = 0, width = 0, height = 0;
 
@@ -128,7 +133,7 @@ Texture2D *ResourceManager::load_texture2D(const std::string &textureName, const
     return newTexture2D;
 }
 
-Texture2D *ResourceManager::get_texture2D(const std::string &textureName) const
+Texture2D *ResourceManager::getTexture2D(const std::string &textureName) const
 {
     Textures2DMap::const_iterator iter = _textures2DMap.find(textureName);
 
@@ -142,11 +147,11 @@ Texture2D *ResourceManager::get_texture2D(const std::string &textureName) const
     return iter->second.get();
 }
 
-Texture2D *ResourceManager::load_texture_atlas(const std::string &textureName, const std::string &texturePath,
+Texture2D *ResourceManager::loadTextureAtlas(const std::string &textureName, const std::string &texturePath,
                                                            const std::vector<std::string> &subTextureNames, const unsigned int &subTextureWidth,
                                                            const unsigned int &subTextureHeight, const unsigned char &textureNumber)
 {
-    auto texture = load_texture2D(std::move(textureName), std::move(texturePath), textureNumber);
+    auto texture = loadTexture2D(std::move(textureName), std::move(texturePath), textureNumber);
     if (texture)
     {
         const unsigned int textureWidth = texture->get_width();
@@ -171,13 +176,13 @@ Texture2D *ResourceManager::load_texture_atlas(const std::string &textureName, c
     return texture;
 }
 
-Sound *ResourceManager::load_sound(const std::string &soundName, ma_engine &engine, const std::string &soundPath, const unsigned int &soundFlag)
+Sound *ResourceManager::loadSound(const std::string &soundName, ma_engine *engine, const std::string &soundPath, const unsigned int &soundFlag)
 {
     Sound *newSound= _soundsMap.emplace(soundName, std::make_unique<Sound>(engine, (_executablePath + soundPath).c_str(), soundFlag)).first->second.get();
     return newSound;
 }
 
-Sound *ResourceManager::get_sound(const std::string &soundName) const
+Sound *ResourceManager::getSound(const std::string &soundName) const
 {
     SoundsMap::const_iterator iter = _soundsMap.find(soundName);
 
@@ -191,147 +196,3 @@ Sound *ResourceManager::get_sound(const std::string &soundName) const
     return iter->second.get();
 }
 
-bool ResourceManager::load_JSON_resources(const std::string &JSONPath)
-{
-    std::string JSONString = get_file_string(JSONPath);
-
-#   ifndef FLAG_RELEASE
-    if (JSONString.empty())
-    {
-        std::cerr << "No JSON resorces file!" << std::endl;
-        return false;
-    }
-#   endif
-
-    rapidjson::Document document;
-    rapidjson::ParseResult parseResult = document.Parse(JSONString.c_str());
-
-#   ifndef FLAG_RELEASE
-    if (!parseResult)
-    {
-        std::cerr << "JSON parse error: " << rapidjson::GetParseError_En(parseResult.Code()) << '(' << parseResult.Offset() << ')' << std::endl;
-        std::cerr << "In JSON file:" << JSONPath << std::endl;
-        return false;
-    }
-#   endif
-
-    auto shadersIterator = document.FindMember("shaders");
-    if (shadersIterator != document.MemberEnd())
-    {
-        for (const auto &currentShader : shadersIterator->value.GetArray())
-        {
-            const std::string name = currentShader["name"].GetString();
-            const std::string pathVertexFile = currentShader["pathVertexFile"].GetString();
-            const std::string pathFragmentFile = currentShader["pathFragmentFile"].GetString();
-            auto shaderSprite2D = load_shaders(name, pathVertexFile, pathFragmentFile);
-
-#           ifndef FLAG_RELEASE
-            if (!shaderSprite2D->is_compiled())
-            {
-                std::cerr << "Can't find Sheder Program: " << name << std::endl;
-                return false;
-            }
-#           endif
-        }
-    }
-
-    auto textureAtlasesIterator = document.FindMember("textureAtlases");
-    if (textureAtlasesIterator != document.MemberEnd())
-    {
-        for (const auto &currentTextureAtlases : textureAtlasesIterator->value.GetArray())
-        {
-            const std::string name = currentTextureAtlases["name"].GetString();
-            const std::string filePath = currentTextureAtlases["filePath"].GetString();
-            const unsigned int subTextureWidth = currentTextureAtlases["subTextureWidth"].GetUint();
-            const unsigned int subTextureHeight = currentTextureAtlases["subTextureHeight"].GetUint();
-
-            const auto subTexturesArray = currentTextureAtlases["subTextures"].GetArray();
-            std::vector<std::string> subTextures;
-            subTextures.reserve(subTexturesArray.Size());
-            for (const auto &currentSubTexture : subTexturesArray)
-            {
-                subTextures.push_back(currentSubTexture.GetString());
-            }
-            auto textureAtlase = load_texture_atlas(name, filePath, std::move(subTextures), subTextureWidth, subTextureHeight);
-#           ifndef FLAG_RELEASE
-            if (!textureAtlase)
-            {
-                std::cerr << "Can't Create Texture Atlase: " << name << std::endl;
-                return false;
-            }
-#           endif
-        }
-    }
-
-    // auto spriteIterator = document.FindMember("sprite");
-    // if (spriteIterator != document.MemberEnd())
-    // {
-    //     for (const auto &currentSpite : spriteIterator->value.GetArray())
-    //     {
-    //         const std::string nameSprite = currentSpite["name"].GetString();
-    //         const std::string nameShader = currentSpite["shader"].GetString();
-    //         const std::string nameTextureAtlas = currentSpite["textureAtlas"].GetString();
-    //         const std::string nameSubTexture = currentSpite["initialSubTexture"].GetString();
-    //         const std::string nameUsage = currentSpite["usage"].GetString();
-    //         auto colorIterator = currentSpite.FindMember("color");
-    //         RenderEngine::Sprite2D *sprite;
-    //         if (colorIterator != currentSpite.MemberEnd())
-    //         {
-    //             const auto colorArray = colorIterator->value.GetArray();
-    //             const glm::vec3 color = glm::vec3(colorArray[0].GetFloat(), colorArray[1].GetFloat(), colorArray[2].GetFloat());
-    //             sprite = load_sprite2D(nameSprite, nameShader, nameTextureAtlas, nameSubTexture, nameUsage, color);
-    //         }
-    //         else
-    //         {
-    //             sprite = load_sprite2D(nameSprite, nameShader, nameTextureAtlas, nameSubTexture, nameUsage, glm::vec3(1.f));
-    //         }
-
-    //         if (!sprite)
-    //         {
-    //             continue;
-    //         }
-
-    //         auto framesIterator = currentSpite.FindMember("frames");
-    //         if (framesIterator != currentSpite.MemberEnd())
-    //         {
-    //             const auto framesArray = framesIterator->value.GetArray();
-    //             std::vector<RenderEngine::Sprite2D::FrameDescription> framesDescription;
-    //             framesDescription.reserve(framesArray.Size());
-    //             for (const auto &currentFrame : framesArray)
-    //             {
-    //                 const std::string nameSubTexture = currentFrame["subTexture"].GetString();
-    //                 const double duration = currentFrame["duration"].GetDouble();
-    //                 const auto textureAtlas = get_texture2D(nameTextureAtlas);
-    //                 const auto subTexture = textureAtlas->get_sub_texture(nameSubTexture);
-    //                 framesDescription.emplace_back(subTexture.leftBottomVertex, subTexture.rightTopVertex, duration);
-    //             }
-    //             sprite->insert_frames(std::move(framesDescription));
-    //         }
-    //     }
-    // }
-
-
-
-    // auto soundIterator = document.FindMember("sounds");
-    // if (soundIterator != document.MemberEnd())
-    // {
-    //     for (const auto &currentSound : soundIterator->value.GetArray())
-    //     {
-    //         const std::string name = currentSound["name"].GetString();
-    //         const std::string soundPath = currentSound["soundPath"].GetString();
-
-    //         unsigned int flag = 0;
-
-    //         auto currentFlag = currentSound["flag"].GetObject();
-
-    //         if(currentFlag["NONE"].GetBool()) flag |= Sound::Flag::NONE;
-    //         if(currentFlag["STREAM"].GetBool()) flag |= Sound::Flag::STREAM;
-    //         if(currentFlag["LOOP"].GetBool()) flag |= Sound::Flag::LOOP;
-    //         if(currentFlag["NO_SPATIALIZATION"].GetBool()) flag |= Sound::Flag::NO_SPATIALIZATION;
-
-    //         auto sound = load_sound(name, soundPath, flag);
-    //     }
-    // }
-
-    return true;
-}

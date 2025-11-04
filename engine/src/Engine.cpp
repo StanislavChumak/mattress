@@ -1,157 +1,177 @@
-#include "../include/Engine.h"
+#include "Engine.h"
 
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "glm/vec2.hpp"
 
-#include "rapidjson/error/en.h"
+#include "jsonManager.h"
 
-#include "../include/components/core/Input.h"
-#include "../include/components/core/Game.h"
-#include "../include/components/core/Window.h"
-#include "../include/components/rendering/Camera.h"
-#include "../include/components/audio/AudioEngine.h"
+#include "components/rendering/Camera.h"
+#include "components/audio/Audio.h"
+#include "components/ui/Cursor.h"
 
-#include "../include/components/registerComponent.h"
-#include "../include/components/core/Transform.h"
-#include "../include/components/rendering/Sprite.h"
-#include "../include/components/rendering/Animator.h"
+
+#include "components/registerComponent.h"
+#include "components/core/Transform.h"
+#include "components/rendering/Sprite.h"
+#include "components/rendering/Animator.h"
 
 #include "systems/rendering/RenderSystem.h"
 #include "systems/rendering/AnimatorSystem.h"
+#include "systems/input/CursorFollowersSystem.h"
 
 #ifndef FLAG_RELEASE
 #include <iostream>
 #endif
 
-#include "resources/renderer/Renderer.h"
+using namespace engine;
 
-void window_size_callback(GLFWwindow *window, int width, int height);
+void windowSizeCallback(GLFWwindow *window, int width, int height);
 void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mode);
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void cursorCallback(GLFWwindow *window, double xpos, double ypos);
 
-Engine::Engine(const char *executablePath, glm::uvec2 gameSize, const char *windowName, unsigned int windowScale)
-: _resource(executablePath)
+bool loadJsonResource(ECSWorld &world, ResourceManager &resources, std::string pathJsonResource);
+bool loadJsonComponent(ECSWorld &world, ResourceManager &resources, std::string pathJsonResource);
+
+Core::Core():inputSystem(world.addSingleComponent(Input{})){}
+
+bool Core::init(const Config& config)
 {
-    _world.addSingleComponent(Input{});
-    _world.addSingleComponent(Camera{});
-    _world.addSingleComponent(Game{gameSize});
-    Window &window = _world.addSingleComponent(Window{gameSize * windowScale, windowName, windowScale});
-    Audio& audio = _world.addSingleComponent(Audio{});
+    window = &world.addSingleComponent(Window(config.gameSize * config.pixelScale, config.nameWindow.c_str(), config.pixelScale));
+    game = &world.addSingleComponent(Game{config.gameSize, config.initState});
+    Audio &audio = world.addSingleComponent(Audio{});
+
+    world.addSingleComponent(Cursor{});
 
     if (!glfwInit())
     {
 #ifndef FLAG_RELEASE
         std::cerr << "Failed GLFW" << std::endl;
+        return false;
 #endif
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window.window = glfwCreateWindow(window.size.x, window.size.y, window.name, nullptr, nullptr);
+    window->poiter = glfwCreateWindow(window->size.x, window->size.y, window->name, nullptr, nullptr);
 #ifndef FLAG_RELEASE
-    if (!window.window)
+    if (!window->poiter)
     {
         std::cerr << "Failed to create GLFW window" << std::endl;
         const char *description;
         int code = glfwGetError(&description);
 
-        if (description)
-            std::cerr << code << description;
-
+        if (description) std::cerr << code << description;
+        
         glfwTerminate();
+        return false;
     }
 #endif
-    glfwMakeContextCurrent(window.window);
+    glfwMakeContextCurrent(window->poiter);
 
-    glfwSetFramebufferSizeCallback(window.window, window_size_callback);
-    glfwSetKeyCallback(window.window, keyCallback);
-    glfwSetMouseButtonCallback(window.window, mouseButtonCallback);
-    glfwSetCursorPosCallback(window.window, cursorCallback);
+    glfwSetFramebufferSizeCallback(window->poiter, windowSizeCallback);
+    glfwSetKeyCallback(window->poiter, keyCallback);
+    glfwSetMouseButtonCallback(window->poiter, mouseButtonCallback);
+    glfwSetCursorPosCallback(window->poiter, cursorCallback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
 #ifndef FLAG_RELEASE
         std::cerr << "Couidn't load opengl" << std::endl;
         glfwTerminate();
+        return false;
 #endif
     }
 
 #ifndef FLAG_RELEASE
-    std::cout << "Renderer: " << lastRenderer::get_renderer_string() << std::endl;
-    std::cout << "OpenGL version: " << lastRenderer::get_renderer_string() << std::endl;
-    std::cout << "GLSL Version: " << lastRenderer::get_GLSL_version_string() << std::endl;
+    std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
+    std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 #endif
-        
-    glfwSetWindowSize(window.window, window.size.x, window.size.y);
 
     audio.init();
+#ifndef FLAG_RELEASE
     if(!audio.initialized)
     {
         std::cerr << "Failed to init sound engine" << std::endl;
         glfwTerminate();
+        return false;
     }
+#endif
     
-    auto userPointer = std::make_pair<InputSystem*, ECSWorld*>(&_input, &_world);
-    glfwSetWindowUserPointer(window.window, &userPointer);
-    // cursor
-    glfwSetInputMode(window.window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    glfwSetWindowUserPointer(window->poiter, this);
 
-    lastRenderer::set_clear_color(0.0f, 0.0f, 0.0f, 1.0f);
-    lastRenderer::set_depth_test(true);
 
-    window_size_callback(window.window, window.size.x, window.size.y);
+    if(!config.displayCursor) glfwSetInputMode(window->poiter, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
+    glClearColor(config.clearColor[0], config.clearColor[1], config.clearColor[2], config.clearColor[3]);
+    
+    if(config.depth) glEnable(GL_DEPTH_TEST);
+
+    resources.setExecutablePath(config.executablePath);
+
+    if(!loadJsonResource(world,resources, config.pathJsonResource)) return false;
+    if(!loadJsonComponent(world,resources, config.pathJsonComponent)) return false;
+
+    world.addSingleComponent(Camera{});
+    
+    systems.registerSystem<RenderSystem>(SystemPriority::RENDERING);
+    systems.registerAlwaysRunSystem<RenderSystem>();
+    systems.registerSystem<AnimatorSystem>(SystemPriority::ANIMATION);
+    systems.registerAlwaysRunSystem<AnimatorSystem>();
+    systems.registerSystem<CursorFollowersSystem>(SystemPriority::INPUT);
+    systems.registerAlwaysRunSystem<CursorFollowersSystem>();
+
+
+    glfwSetWindowSize(window->poiter, window->size.x, window->size.y);
+    windowSizeCallback(window->poiter, window->size.x, window->size.y);
+    
+    return true;
 }
 
-Engine::~Engine()
+void Core::update(float delta)
 {
-    _resource.clear();
-    _world.getSingleComponent<Audio>().destroy();
-    _world.clearComponentStorage<Sprite2D>();
+    glfwPollEvents();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    systems.update(world, delta, game->currentState);
+
+    glfwSwapBuffers(window->poiter);
+}
+
+void Core::shutdown()
+{
+    resources.clear();
+    world.getSingleComponent<Audio>().destroy();
+    world.clearComponentStorage<Sprite2D>();
     glfwTerminate();
 }
 
-bool Engine::loadJsonComponent(std::string pathJsonComponent)
+bool loadJsonComponent(ECSWorld &world, ResourceManager &resources, std::string pathJsonComponent)
 {
-    registerComponent<Transform>("Transform");
-    registerComponent<Sprite2D>("Sprite2D");
-    registerComponent<Animator>("Animator");
+    REGISTER_COMPONENT(Transform);
+    REGISTER_COMPONENT(Sprite2D);
+    REGISTER_COMPONENT(Animator);
+    REGISTER_COMPONENT(CursorFollower);
 
-    std::string JSONstring = _resource.get_file_string(pathJsonComponent);
+    std::unordered_map<std::string, std::string> defines;
+    std::string JSONstring = preprocessJSON(pathJsonComponent, defines);
 
-#   ifndef FLAG_RELEASE
-    if (JSONstring.empty())
-    {
-        std::cerr << "No JSON resorces file!" << std::endl;
-        return false;
-    }
-#   endif
-
-    rapidjson::Document document;
-    rapidjson::ParseResult parseResult = document.Parse(JSONstring.c_str());
-
-#   ifndef FLAG_RELEASE
-    if (!parseResult)
-    {
-        std::cerr << "JSON parse error: " << rapidjson::GetParseError_En(parseResult.Code()) << '(' << parseResult.Offset() << ')' << std::endl;
-        std::cerr << "In JSON file:" << pathJsonComponent << std::endl;
-        return false;
-    }
-#   endif
+    rapidjson::Document document = getDocumentFromJSON(JSONstring);
 
     auto entitiesIterator = document.FindMember("entities");
     if (entitiesIterator != document.MemberEnd())
     {
         for(const auto &currentEntity : entitiesIterator->value.GetArray())
         {
-            EntityID id = _world.createEntity();
+            EntityID id = world.createEntity();
             for (auto it = currentEntity.MemberBegin(); it != currentEntity.MemberEnd(); ++it)
             {
                 const char* name = it->name.GetString();
                 const rapidjson::Value& value = it->value;
-                typeRegistry[name].addComponentFromJson(id, value, _world, _resource);
+                typeRegistry[name].addComponentFromJson(id, value, world, resources);
             }
         }
     }
@@ -159,52 +179,92 @@ bool Engine::loadJsonComponent(std::string pathJsonComponent)
     return true;
 }
 
-bool Engine::loadJsonSystem(std::string pathJsonSystem)
+bool loadJsonResource(ECSWorld &world, ResourceManager &resources, std::string pathJsonResource)
 {
-    _system.registerSystem<RenderSystem>(SystemPriority::RENDERING);
-    _system.registerAlwaysRunSystem<RenderSystem>();
-    _system.registerSystem<AnimatorSystem>(SystemPriority::ANIMATION);
-    _system.registerAlwaysRunSystem<AnimatorSystem>();
+    std::unordered_map<std::string, std::string> defines;
+    std::string JSONstring = preprocessJSON(pathJsonResource, defines);
 
-    return true;
-}
+    rapidjson::Document document = getDocumentFromJSON(JSONstring);
 
-bool Engine::loadJsonResource(std::string pathJsonResource)
-{
-    _resource.load_JSON_resources(pathJsonResource);
-
-    return true;
-}
-
-void Engine::lifeCycle()
-{
-    auto window = _world.getSingleComponent<Window>().window;
-
-    double lastTime = glfwGetTime(), currentTime, delta;
-
-    while (!glfwWindowShouldClose(window))
+    auto shadersIterator = document.FindMember("shaders");
+    if (shadersIterator != document.MemberEnd())
     {
-        currentTime = glfwGetTime();
-        delta = currentTime - lastTime;
+        for (const auto &currentShader : shadersIterator->value.GetArray())
+        {
+            const std::string name = currentShader["name"].GetString();
+            const std::string pathVertexFile = currentShader["pathVertexFile"].GetString();
+            const std::string pathFragmentFile = currentShader["pathFragmentFile"].GetString();
+            auto shaderSprite2D = resources.loadShaders(name, pathVertexFile, pathFragmentFile);
 
-        glfwPollEvents();
-        lastRenderer::clear();
-
-        _system.update(_world, delta, "");
-
-        glfwSwapBuffers(window);
-
-            
-        lastTime = currentTime;
+#           ifndef FLAG_RELEASE
+            if (!shaderSprite2D->is_compiled())
+            {
+                std::cerr << "Can't find Sheder Program: " << name << std::endl;
+                return false;
+            }
+#           endif
+        }
     }
+
+    auto textureAtlasesIterator = document.FindMember("textureAtlases");
+    if (textureAtlasesIterator != document.MemberEnd())
+    {
+        for (const auto &currentTextureAtlases : textureAtlasesIterator->value.GetArray())
+        {
+            const std::string name = currentTextureAtlases["name"].GetString();
+            const std::string filePath = currentTextureAtlases["filePath"].GetString();
+            const unsigned int subTextureWidth = currentTextureAtlases["subTextureWidth"].GetUint();
+            const unsigned int subTextureHeight = currentTextureAtlases["subTextureHeight"].GetUint();
+
+            const auto subTexturesArray = currentTextureAtlases["subTextures"].GetArray();
+            std::vector<std::string> subTextures;
+            subTextures.reserve(subTexturesArray.Size());
+            for (const auto &currentSubTexture : subTexturesArray)
+            {
+                subTextures.push_back(currentSubTexture.GetString());
+            }
+            auto textureAtlase = resources.loadTextureAtlas(name, filePath, std::move(subTextures), subTextureWidth, subTextureHeight);
+#           ifndef FLAG_RELEASE
+            if (!textureAtlase)
+            {
+                std::cerr << "Can't Create Texture Atlase: " << name << std::endl;
+                return false;
+            }
+#           endif
+        }
+    }
+
+    auto soundIterator = document.FindMember("sounds");
+    if (soundIterator != document.MemberEnd())
+    {
+        Audio &audio = world.getSingleComponent<Audio>();
+        for (const auto &currentSound : soundIterator->value.GetArray())
+        {
+            const std::string name = currentSound["name"].GetString();
+            const std::string soundPath = currentSound["soundPath"].GetString();
+
+            unsigned int flag = 0;
+
+            auto currentFlag = currentSound["flag"].GetObject();
+
+            if(currentFlag["NONE"].GetBool()) flag |= Sound::Flag::NONE;
+            if(currentFlag["STREAM"].GetBool()) flag |= Sound::Flag::STREAM;
+            if(currentFlag["LOOP"].GetBool()) flag |= Sound::Flag::LOOP;
+            if(currentFlag["NO_SPATIALIZATION"].GetBool()) flag |= Sound::Flag::NO_SPATIALIZATION;
+
+            auto sound = resources.loadSound(name, &audio.engine, soundPath, flag);
+        }
+    }
+
+    return true;
 }
 
-void window_size_callback(GLFWwindow *window, int width, int height)
+void windowSizeCallback(GLFWwindow *window, int width, int height)
 {
-    std::pair<InputSystem*, ECSWorld*> *pair = static_cast<std::pair<InputSystem*, ECSWorld*>*>(glfwGetWindowUserPointer(window));
-    if (pair)
+    Core *core = static_cast<Core*>(glfwGetWindowUserPointer(window));
+    if (core)
     {
-        ECSWorld &world = *pair->second;
+        ECSWorld &world = core->world;
 
         glm::uvec2 windowSize = glm::uvec2(width, height);
         Game game = world.getSingleComponent<Game>();
@@ -235,25 +295,25 @@ void window_size_callback(GLFWwindow *window, int width, int height)
 
 void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mode)
 {
-    std::pair<InputSystem*, ECSWorld*> *pair = static_cast<std::pair<InputSystem*, ECSWorld*>*>(glfwGetWindowUserPointer(window));
-    if (pair)
-        pair->first->setKey(*pair->second, key, (Input::Action)action);
+    Core *core = static_cast<Core*>(glfwGetWindowUserPointer(window));
+    if (core)
+        core->inputSystem.setKey(core->world, key, (Input::Action)action);
 }
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-    std::pair<InputSystem*, ECSWorld*> *pair = static_cast<std::pair<InputSystem*, ECSWorld*>*>(glfwGetWindowUserPointer(window));
-    if (pair)
-        pair->first->setMouseButton(*pair->second, button, (Input::Action)action);
+    Core *core = static_cast<Core*>(glfwGetWindowUserPointer(window));
+    if (core)
+        core->inputSystem.setMouseButton(core->world, button, (Input::Action)action);
 }
 
 void cursorCallback(GLFWwindow *window, double xpos, double ypos)
 {
-    std::pair<InputSystem*, ECSWorld*> *pair = static_cast<std::pair<InputSystem*, ECSWorld*>*>(glfwGetWindowUserPointer(window));
-    if (pair && pair->first && pair->second)
+    Core *core = static_cast<Core*>(glfwGetWindowUserPointer(window));
+    if (core)
     {
-        InputSystem &input = *pair->first;
-        ECSWorld &world = *pair->second;
+        InputSystem &input = core->inputSystem;
+        ECSWorld &world = core->world;
         glm::dvec2 offset(world.getSingleComponent<Camera>().offsetViewport);
         glm::dvec2 pos(xpos, ypos);
         pos -= offset;

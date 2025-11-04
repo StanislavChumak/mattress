@@ -5,27 +5,45 @@
 #include "../src/systems/SystemManager.h"
 #include "../src/systems/input/InputSystem.h"
 #include "../src/resources/ResourceManager.h"
+#include "components/core/Window.h"
+#include "components/core/Game.h"
 
-#include "glm/fwd.hpp"
-
-class Engine
+namespace engine
 {
-private:
-    ECSWorld _world;
-    SystemManager _system;
-    InputSystem _input;
-    ResourceManager _resource;
-public:
-    Engine(const char *executablePath, glm::uvec2 gameSize, const char *nameWindow, unsigned int windowScale = 1);
-    ~Engine();
+    struct Config
+    {
+        std::string executablePath;
+        std::string nameWindow = "";
+        unsigned int pixelScale = 1;
+        glm::uvec2 gameSize;
 
-    bool loadJsonComponent(std::string pathJsonComponent);
-    bool loadJsonSystem(std::string pathJsonSystem);
-    bool loadJsonResource(std::string pathJsonResource);
+        std::string pathJsonResource = "";
+        std::string pathJsonComponent = "";
 
-    void lifeCycle();
+        bool displayCursor = true;
+        float clearColor[4] = {0.f, 0.f, 0.f, 1.f};
+        bool depth = true;
 
-    ECSWorld &components() { return _world;}
-};
+        std::string initState;
+    };
+
+    class Core 
+    {
+        Window *window;
+        Game *game;
+    public:
+        ResourceManager resources;
+        ECSWorld world;
+        SystemManager systems;
+        InputSystem inputSystem;
+        Core();
+        
+        bool init(const Config& config);
+        void update(float delta);
+        void shutdown();
+
+        bool isCloseWindow() { return glfwWindowShouldClose(window->poiter); }
+    };
+}
 
 #endif

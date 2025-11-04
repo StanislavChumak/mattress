@@ -27,8 +27,8 @@ struct Sprite2D {
 
     void fromJson(const rapidjson::Value& j, const ResourceManager &resource)
     {
-        shader = resource.get_shader_program(j["shader"].GetString());
-        texture = resource.get_texture2D(j["texture"].GetString());
+        shader = resource.getShaderProgram(j["shader"].GetString());
+        texture = resource.getTexture2D(j["texture"].GetString());
         auto jsubTextures = j["subTextures"].GetArray();
         subTextures = new Texture2D::SubTexture2D[jsubTextures.Size()];
         for(int i = 0; i < jsubTextures.Size(); i++)
@@ -37,6 +37,7 @@ struct Sprite2D {
         }
         std::string nameUsage = j["usage"].GetString();
         glm::vec3 color = glm::vec3(1.f);
+        layer = j["layer"].GetFloat();
         auto colorIterator = j.FindMember("color");
         if (colorIterator != j.MemberEnd())
         {

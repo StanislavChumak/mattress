@@ -17,7 +17,7 @@ public:
         NO_SPATIALIZATION  = 0b100000000000000
     };
 
-    Sound(ma_engine &engine, const char *path, ma_uint32 flag);
+    Sound(ma_engine *engine, const char *path, ma_uint32 flag);
     ~Sound();
 
     void play();

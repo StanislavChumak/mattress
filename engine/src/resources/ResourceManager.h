@@ -28,25 +28,25 @@ private:
     SoundsMap _soundsMap;
     
     std::string _executablePath;
+
+    std::string getFileString(const std::string &relativeFilePath);
 public:
-    ResourceManager(const std::string &executablePath);
+    ResourceManager();
     ~ResourceManager();
     void clear();
 
-    ShaderProgram *load_shaders(const std::string &shaderName, const std::string &vertexPath, const std::string &fragmentPath);
-    ShaderProgram *get_shader_program(const std::string &shaderName) const;
+    void setExecutablePath(const std::string &executablePath);
 
-    Texture2D *load_texture2D(const std::string &textureName, const std::string &texturePath, const unsigned char &textureNumber = 0);
-    Texture2D *get_texture2D(const std::string &textureName) const;
-    Texture2D *load_texture_atlas(const std::string &textureName, const std::string &texturePath, const std::vector<std::string> &subTextureNames,
+    ShaderProgram *loadShaders(const std::string &shaderName, const std::string &vertexPath, const std::string &fragmentPath);
+    ShaderProgram *getShaderProgram(const std::string &shaderName) const;
+
+    Texture2D *loadTexture2D(const std::string &textureName, const std::string &texturePath, const unsigned char &textureNumber = 0);
+    Texture2D *getTexture2D(const std::string &textureName) const;
+    Texture2D *loadTextureAtlas(const std::string &textureName, const std::string &texturePath, const std::vector<std::string> &subTextureNames,
                                               const unsigned int &subTextureWidth, const unsigned int &subTextureHeight, const unsigned char &textureNumber = 0);
 
-    Sound *load_sound(const std::string &soundName, ma_engine &engine, const std::string &soundPath, const unsigned int &soundFlag);
-    Sound *get_sound(const std::string &soundName) const;
-
-    bool load_JSON_resources(const std::string &JSONPath);
-        
-    std::string get_file_string(const std::string &relativeFilePath);
+    Sound *loadSound(const std::string &soundName, ma_engine *engine, const std::string &soundPath, const unsigned int &soundFlag);
+    Sound *getSound(const std::string &soundName) const;
 };
 
 #endif

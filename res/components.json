@@ -1,7 +1,9 @@
 {
+    "#define BLOCK_SIZE 32 " : 0,
+
     "entities" : [
         {
-            "Transform" : { "pos_x" : 0, "pos_y" : 0, "size_x" : 32, "size_y" : 32, "rotation" : 0.0},
+            "Transform" : { "pos" : [0, 0], "size" : ["BLOCK_SIZE" , "BLOCK_SIZE"], "rotation" : 0.0},
             "Sprite2D"  : { 
                 "shader" : "shaderSprite2D", 
                 "texture" : "grassland_cell", 
@@ -15,18 +17,23 @@
                     "grassland_cell7",
                     "grassland_cell8"
                 ],
-                "usage" : "static"},
+                "layer" : 0.0,
+                "usage" : "static"
+            },
             "Animator"  : {
                 "framesDuration" : [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
             }
         },
         {
-            "Transform" : { "pos_x" : 32, "pos_y" : 32, "size_x" : 8, "size_y" : 8, "rotation" : 0.0},
+            "Transform" : { "pos" : [0, 0], "size" : ["BLOCK_SIZE / 4", "BLOCK_SIZE / 4"], "rotation" : 0.0},
             "Sprite2D"  : { 
                 "shader" : "shaderSprite2D", 
                 "texture" : "cursor", 
                 "subTextures" : [ "cursor" ],
-                "usage" : "dynamic"}
+                "layer" : 1.0,
+                "usage" : "dynamic"
+            },
+            "CursorFollower" : { "offset" : [0, "0 - BLOCK_SIZE / 4"] }
         }
     ]
 }

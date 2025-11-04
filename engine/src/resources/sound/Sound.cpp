@@ -1,7 +1,7 @@
-#define MINIAUDIO_IMPLEMENTATION
-#include "../../external/miniaudio.h"
-
 #include "Sound.h"
+
+
+#include "../../external/miniaudio.h"
 
 #include <string>
 
@@ -9,13 +9,14 @@
 #include <iostream>
 #endif
 
-Sound::Sound(ma_engine &engine, const char *path, ma_uint32 flag)
+Sound::Sound(ma_engine *engine, const char *path, ma_uint32 flag)
 : _thisSound(new ma_sound)
 {
-    if(ma_sound_init_from_file(&engine, path, flag, nullptr, nullptr, _thisSound) != MA_SUCCESS)
+    ma_result result = ma_sound_init_from_file(engine, path, flag, nullptr, nullptr, _thisSound);
+    if(result != MA_SUCCESS)
     {
 #ifndef FLAG_RELEASE
-        std::cerr << "Failed init sould to path " << path << std::endl;
+        std::cerr << "Failed init sould to path " << path << " " << result << std::endl;
 #endif
     }
 }

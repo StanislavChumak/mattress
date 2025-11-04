@@ -8,7 +8,7 @@ class RenderSystem : public SystemBase
 public:
     RenderSystem() = default;
 
-    void update(ECSWorld &component, const double &delta) override;
+    void update(ECSWorld &world, const double &delta) override;
 };
 
 #endif

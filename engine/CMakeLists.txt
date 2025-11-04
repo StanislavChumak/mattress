@@ -23,6 +23,8 @@ src/Engine.cpp
 src/ECSWorld.h
 src/View.h
 src/SparseSet.h
+src/jsonManager.h
+src/jsonManager.cpp
 
 
 src/systems/SystemManager.h
@@ -31,6 +33,8 @@ include/SystemBase.h
 
 src/systems/input/InputSystem.h
 src/systems/input/InputSystem.cpp
+src/systems/input/CursorFollowersSystem.h
+src/systems/input/CursorFollowersSystem.cpp
 src/systems/rendering/RenderSystem.h
 src/systems/rendering/RenderSystem.cpp
 src/systems/rendering/AnimatorSystem.h
@@ -46,7 +50,9 @@ include/components/core/Game.h
 include/components/rendering/Camera.h
 include/components/rendering/Animator.h
 include/components/rendering/Sprite.h
-include/components/meta/Cursor.h
+include/components/audio/Audio.h
+include/components/ui/Cursor.h
+
 
 
 src/resources/ResourceManager.h
@@ -60,8 +66,6 @@ src/resources/renderer/BufferObject.h
 src/resources/renderer/BufferObject.cpp
 src/resources/renderer/VertexArrayObject.h
 src/resources/renderer/VertexArrayObject.cpp
-src/resources/renderer/Renderer.h
-src/resources/renderer/Renderer.cpp
 
 src/resources/sound/Sound.h
 src/resources/sound/Sound.cpp

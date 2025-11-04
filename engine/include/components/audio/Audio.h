@@ -1,6 +1,7 @@
 #ifndef AUDIO_ENGINE_H
 #define AUDIO_ENGINE_H
 
+#define MINIAUDIO_IMPLEMENTATION
 #include "../../../external/miniaudio.h"
 
 struct Audio
