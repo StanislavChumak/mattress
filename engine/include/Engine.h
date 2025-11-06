@@ -1,12 +1,13 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "../src/ECSWorld.h"
-#include "../src/systems/SystemManager.h"
-#include "../src/systems/input/InputSystem.h"
-#include "../src/resources/ResourceManager.h"
-#include "components/core/Window.h"
-#include "components/core/Game.h"
+#include "ECSWorld.h"
+#include "systems/SystemManager.h"
+#include "systems/input/InputSystem.h"
+#include "resources/ResourceManager.h"
+
+struct Window;
+struct Game;
 
 namespace engine
 {
@@ -16,9 +17,6 @@ namespace engine
         std::string nameWindow = "";
         unsigned int pixelScale = 1;
         glm::uvec2 gameSize;
-
-        std::string pathJsonResource = "";
-        std::string pathJsonComponent = "";
 
         bool displayCursor = true;
         float clearColor[4] = {0.f, 0.f, 0.f, 1.f};
@@ -39,10 +37,11 @@ namespace engine
         Core();
         
         bool init(const Config& config);
+        void loadJsonComponent(std::string pathJsonResource);
         void update(float delta);
         void shutdown();
 
-        bool isCloseWindow() { return glfwWindowShouldClose(window->poiter); }
+        bool isCloseWindow();
     };
 }
 

@@ -7,7 +7,7 @@
 			"pathFragmentFile" : "res/shaders/fragmentShader2D.txt"
 		}
 	],
-	"textureAtlases": [
+	"textures": [
 		{
 			"name"             : "grassland_cell",
 			"filePath"         : "res/textures/grassland_cell.png",

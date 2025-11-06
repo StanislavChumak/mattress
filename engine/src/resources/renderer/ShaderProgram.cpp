@@ -1,19 +1,60 @@
-#include "ShaderProgram.h"
+#include "resources/renderer/ShaderProgram.h"
 
-#include <glad/glad.h>
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "glad/glad.h"
+#include "glm/mat4x4.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
+#include <fstream>
 
 #ifndef FLAG_RELEASE
 #include <iostream>
 #endif
 
-
-ShaderProgram::ShaderProgram(const char *vertexShaderCode, const char *fragmentShaderCode)
+std::string getFileString(const std::string &relativeFilePath)
 {
+    std::ifstream fileFlow;
+    fileFlow.open(relativeFilePath, std::ios::ate | std::ios::binary);
+
+#   ifndef FLAG_RELEASE
+    if (!fileFlow.is_open())
+    {
+        std::cerr << "Failed to open file: " << relativeFilePath << std::endl;
+        return "";
+    }
+#   endif
+
+    std::streamsize size = fileFlow.tellg();
+    fileFlow.seekg(0);
+
+    char* buffer = new char[size + 1];
+    fileFlow.read(buffer, size);
+    buffer[size] = '\0';
+
+    return std::string(buffer);
+}
+
+void ShaderProgram::fromJson(simdjson::ondemand::object obj)
+{
+    std::string vertexShaderCode = getFileString(std::string(obj["pathVertexFile"].get_string().value()));
+    std::string fragmentShaderCode = getFileString(std::string(obj["pathFragmentFile"].get_string().value()));
+
+#   ifndef FLAG_RELEASE
+    if (vertexShaderCode.empty())
+    {
+        std::cerr << "No vertex shader !" << std::endl;
+        return;
+    }
+    
+    if (fragmentShaderCode.empty())
+    {
+        std::cerr << "No fragment shader !" << std::endl;
+        return;
+    }
+#   endif
+
     GLuint vertexShaderID = 0;
     GLuint fragmentShaderID = 0;
-    if (!create_shader(std::move(vertexShaderCode), GL_VERTEX_SHADER, vertexShaderID))
+    if (!createShader(std::move(vertexShaderCode).c_str(), GL_VERTEX_SHADER, vertexShaderID))
     {
 #ifndef FLAG_RELEASE
         std::cerr << "ERROR::VERTEX::SHADER::COMPILATION_FAILED" << std::endl;
@@ -21,7 +62,7 @@ ShaderProgram::ShaderProgram(const char *vertexShaderCode, const char *fragmentS
 #endif
     }
 
-    if (!create_shader(std::move(fragmentShaderCode), GL_FRAGMENT_SHADER, fragmentShaderID))
+    if (!createShader(std::move(fragmentShaderCode).c_str(), GL_FRAGMENT_SHADER, fragmentShaderID))
     {
 #ifndef FLAG_RELEASE
         std::cerr << "ERROR::FRAGMENT::SHADER::COMPILATION_FAILED" << std::endl;
@@ -54,7 +95,7 @@ ShaderProgram::ShaderProgram(const char *vertexShaderCode, const char *fragmentS
     glDeleteShader(fragmentShaderID);
 }
 
-bool ShaderProgram::create_shader(const char *sourse, const unsigned int &shaderType, unsigned int &shaderID)
+bool ShaderProgram::createShader(const char *sourse, const unsigned int &shaderType, unsigned int &shaderID)
 {
     shaderID = glCreateShader(shaderType);
     glShaderSource(shaderID, 1, &sourse, nullptr);
@@ -104,17 +145,17 @@ void ShaderProgram::use() const
     glUseProgram(_ID);
 }
 
-void ShaderProgram::set_int(const char *name, const int &value) const
+void ShaderProgram::setInt(const char *name, const int &value) const
 {
     glUniform1i(glGetUniformLocation(_ID, name), value);
 }
 
-void ShaderProgram::set_float(const char *name, const float &value) const
+void ShaderProgram::setFloat(const char *name, const float &value) const
 {
     glUniform1f(glGetUniformLocation(_ID, name), value);
 }
 
-void ShaderProgram::set_matrix4(const char *name, const glm::mat4 &matrix) const
+void ShaderProgram::setMatrix4(const char *name, const glm::mat4 &matrix) const
 {
     glUniformMatrix4fv(glGetUniformLocation(_ID, name), 1, GL_FALSE, glm::value_ptr(matrix));
 }

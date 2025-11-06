@@ -9,7 +9,8 @@ constexpr EntityID NULL_ENTITY = std::numeric_limits<EntityID>::max();
 
 
 template<typename TypeComponent>
-class SparseSet{
+class SparseSet
+{
     std::vector<TypeComponent> dense;
     std::vector<EntityID> sparse;
     std::vector<EntityID> entities;
@@ -23,20 +24,21 @@ public:
         entities.reserve(capacity);
     }
 
-    void add(EntityID entity, TypeComponent component) {
+    TypeComponent &add(EntityID entity, TypeComponent component) {
         if (entity >= sparse.size()) {
             sparse.resize(entity + 1, NULL_ENTITY);
         }
         
         if (sparse[entity] != NULL_ENTITY) {
             dense[sparse[entity]] = std::move(component);
-            return;
+            return dense[sparse[entity]];
         }
         
         sparse[entity] = size_;
         entities.push_back(entity);
         dense.push_back(std::move(component));
         size_++;
+        return dense[sparse[entity]];
     }
 
     TypeComponent* get(EntityID entity) {

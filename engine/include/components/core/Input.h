@@ -1,7 +1,7 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#include "rapidjson/document.h"
+
 #include "glm/vec2.hpp"
 
 struct  Input {

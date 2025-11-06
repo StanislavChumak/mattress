@@ -1,6 +1,6 @@
-#include "VertexArrayObject.h"
+#include "resources/renderer/VertexArrayObject.h"
 
-#include "BufferObject.h"
+#include "resources/renderer/BufferObject.h"
 
 
 VertexArrayObject::VertexArrayObject()

@@ -1,27 +1,26 @@
 #ifndef ANIMATOR_H
 #define ANIMATOR_H
 
-#include "rapidjson/document.h"
+#include "../external/jsonUtils.h"
 
 class ResourceManager;
 
 struct Animator {
     unsigned short currentFrame = 0;
     double currentAnimationTime = 0;
-    unsigned short framesCount;
-    double *framesDuration;
+    unsigned short framesCount = 0;
+    std::vector<double> framesDuration;
 
     Animator() = default;
 
-    void fromJson(const rapidjson::Value& j, const ResourceManager &resource)
+    void fromJson(simdjson::ondemand::object obj, ResourceManager &resource)
     {
-        auto jframesDuration = j["framesDuration"].GetArray();
-        framesCount = jframesDuration.Size();
-        framesDuration = new double[framesCount];
-        for(int i = 0; i < framesCount; i++)
+        std::vector<double> buffer;
+        for(auto frameDuration : getVarJSON<simdjson::ondemand::array>(obj["framesDuration"]))
         {
-            framesDuration[i] = jframesDuration[i].GetDouble();
+            framesDuration.push_back(getVarJSON<double>(frameDuration.value()));
         }
+        framesCount = framesDuration.size();
     }
 };
 

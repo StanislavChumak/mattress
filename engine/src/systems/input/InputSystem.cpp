@@ -1,4 +1,4 @@
-#include "InputSystem.h"
+#include "systems/input/InputSystem.h"
 
 #include "components/ui/Cursor.h"
 

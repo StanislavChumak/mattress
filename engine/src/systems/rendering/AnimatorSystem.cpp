@@ -1,8 +1,10 @@
-#include "AnimatorSystem.h"
+#include "systems/rendering/AnimatorSystem.h"
 
 #include "components/rendering/Sprite.h"
 #include "components/rendering/Animator.h"
-#include "../../ECSWorld.h"
+#include "ECSWorld.h"
+
+#include <iostream>
 
 void AnimatorSystem::update(ECSWorld &world, const double &delta)
 {

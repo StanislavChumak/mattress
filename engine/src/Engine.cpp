@@ -4,21 +4,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "glm/vec2.hpp"
 
-#include "jsonManager.h"
-
+#include "components/core/Window.h"
+#include "components/core/Game.h"
 #include "components/rendering/Camera.h"
 #include "components/audio/Audio.h"
 #include "components/ui/Cursor.h"
 
-
 #include "components/registerComponent.h"
-#include "components/core/Transform.h"
-#include "components/rendering/Sprite.h"
-#include "components/rendering/Animator.h"
-
-#include "systems/rendering/RenderSystem.h"
-#include "systems/rendering/AnimatorSystem.h"
-#include "systems/input/CursorFollowersSystem.h"
 
 #ifndef FLAG_RELEASE
 #include <iostream>
@@ -30,9 +22,6 @@ void windowSizeCallback(GLFWwindow *window, int width, int height);
 void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mode);
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void cursorCallback(GLFWwindow *window, double xpos, double ypos);
-
-bool loadJsonResource(ECSWorld &world, ResourceManager &resources, std::string pathJsonResource);
-bool loadJsonComponent(ECSWorld &world, ResourceManager &resources, std::string pathJsonResource);
 
 Core::Core():inputSystem(world.addSingleComponent(Input{})){}
 
@@ -110,26 +99,42 @@ bool Core::init(const Config& config)
     
     if(config.depth) glEnable(GL_DEPTH_TEST);
 
-    resources.setExecutablePath(config.executablePath);
-
-    if(!loadJsonResource(world,resources, config.pathJsonResource)) return false;
-    if(!loadJsonComponent(world,resources, config.pathJsonComponent)) return false;
-
     world.addSingleComponent(Camera{});
-    
-    systems.registerSystem<RenderSystem>(SystemPriority::RENDERING);
-    systems.registerAlwaysRunSystem<RenderSystem>();
-    systems.registerSystem<AnimatorSystem>(SystemPriority::ANIMATION);
-    systems.registerAlwaysRunSystem<AnimatorSystem>();
-    systems.registerSystem<CursorFollowersSystem>(SystemPriority::INPUT);
-    systems.registerAlwaysRunSystem<CursorFollowersSystem>();
-
 
     glfwSetWindowSize(window->poiter, window->size.x, window->size.y);
     windowSizeCallback(window->poiter, window->size.x, window->size.y);
     
     return true;
 }
+
+void Core::loadJsonComponent(std::string pathJsonComponent)
+{
+    simdjson::ondemand::document doc = resources.getJSON(pathJsonComponent);
+    for(simdjson::ondemand::object entity : getVarJSON<simdjson::ondemand::array>(doc["entities"]))
+    {
+        EntityID id = world.createEntity();
+        for(auto field : entity)
+        {
+            auto keyResult = field.unescaped_key();
+            auto valueResult = field.value().get_object();
+#ifndef FLAG_RELEASE
+            if (keyResult.error()) {
+                std::cerr << "Key read error: " << simdjson::error_message(keyResult.error()) << std::endl;
+                continue;
+            }
+            if (valueResult.error()) {
+                std::cerr << "Value read error for component '" << keyResult.value()
+                        << "': " << simdjson::error_message(valueResult.error()) << std::endl;
+                continue;
+            }
+#endif      
+            std::string_view name = keyResult.value();
+            simdjson::ondemand::object obj = valueResult.value();
+            typeRegistry[std::string(name)].addComponentFromJson(id, obj, world, resources);
+        }
+    }
+}
+
 
 void Core::update(float delta)
 {
@@ -139,125 +144,21 @@ void Core::update(float delta)
     systems.update(world, delta, game->currentState);
 
     glfwSwapBuffers(window->poiter);
+    resources.collectUnused();
 }
 
 void Core::shutdown()
 {
-    resources.clear();
-    world.getSingleComponent<Audio>().destroy();
-    world.clearComponentStorage<Sprite2D>();
+    world.clearSets();
+    world.clearSingletons();
     glfwTerminate();
 }
 
-bool loadJsonComponent(ECSWorld &world, ResourceManager &resources, std::string pathJsonComponent)
+bool Core::isCloseWindow()
 {
-    REGISTER_COMPONENT(Transform);
-    REGISTER_COMPONENT(Sprite2D);
-    REGISTER_COMPONENT(Animator);
-    REGISTER_COMPONENT(CursorFollower);
-
-    std::unordered_map<std::string, std::string> defines;
-    std::string JSONstring = preprocessJSON(pathJsonComponent, defines);
-
-    rapidjson::Document document = getDocumentFromJSON(JSONstring);
-
-    auto entitiesIterator = document.FindMember("entities");
-    if (entitiesIterator != document.MemberEnd())
-    {
-        for(const auto &currentEntity : entitiesIterator->value.GetArray())
-        {
-            EntityID id = world.createEntity();
-            for (auto it = currentEntity.MemberBegin(); it != currentEntity.MemberEnd(); ++it)
-            {
-                const char* name = it->name.GetString();
-                const rapidjson::Value& value = it->value;
-                typeRegistry[name].addComponentFromJson(id, value, world, resources);
-            }
-        }
-    }
-
-    return true;
+    return glfwWindowShouldClose(window->poiter);
 }
 
-bool loadJsonResource(ECSWorld &world, ResourceManager &resources, std::string pathJsonResource)
-{
-    std::unordered_map<std::string, std::string> defines;
-    std::string JSONstring = preprocessJSON(pathJsonResource, defines);
-
-    rapidjson::Document document = getDocumentFromJSON(JSONstring);
-
-    auto shadersIterator = document.FindMember("shaders");
-    if (shadersIterator != document.MemberEnd())
-    {
-        for (const auto &currentShader : shadersIterator->value.GetArray())
-        {
-            const std::string name = currentShader["name"].GetString();
-            const std::string pathVertexFile = currentShader["pathVertexFile"].GetString();
-            const std::string pathFragmentFile = currentShader["pathFragmentFile"].GetString();
-            auto shaderSprite2D = resources.loadShaders(name, pathVertexFile, pathFragmentFile);
-
-#           ifndef FLAG_RELEASE
-            if (!shaderSprite2D->is_compiled())
-            {
-                std::cerr << "Can't find Sheder Program: " << name << std::endl;
-                return false;
-            }
-#           endif
-        }
-    }
-
-    auto textureAtlasesIterator = document.FindMember("textureAtlases");
-    if (textureAtlasesIterator != document.MemberEnd())
-    {
-        for (const auto &currentTextureAtlases : textureAtlasesIterator->value.GetArray())
-        {
-            const std::string name = currentTextureAtlases["name"].GetString();
-            const std::string filePath = currentTextureAtlases["filePath"].GetString();
-            const unsigned int subTextureWidth = currentTextureAtlases["subTextureWidth"].GetUint();
-            const unsigned int subTextureHeight = currentTextureAtlases["subTextureHeight"].GetUint();
-
-            const auto subTexturesArray = currentTextureAtlases["subTextures"].GetArray();
-            std::vector<std::string> subTextures;
-            subTextures.reserve(subTexturesArray.Size());
-            for (const auto &currentSubTexture : subTexturesArray)
-            {
-                subTextures.push_back(currentSubTexture.GetString());
-            }
-            auto textureAtlase = resources.loadTextureAtlas(name, filePath, std::move(subTextures), subTextureWidth, subTextureHeight);
-#           ifndef FLAG_RELEASE
-            if (!textureAtlase)
-            {
-                std::cerr << "Can't Create Texture Atlase: " << name << std::endl;
-                return false;
-            }
-#           endif
-        }
-    }
-
-    auto soundIterator = document.FindMember("sounds");
-    if (soundIterator != document.MemberEnd())
-    {
-        Audio &audio = world.getSingleComponent<Audio>();
-        for (const auto &currentSound : soundIterator->value.GetArray())
-        {
-            const std::string name = currentSound["name"].GetString();
-            const std::string soundPath = currentSound["soundPath"].GetString();
-
-            unsigned int flag = 0;
-
-            auto currentFlag = currentSound["flag"].GetObject();
-
-            if(currentFlag["NONE"].GetBool()) flag |= Sound::Flag::NONE;
-            if(currentFlag["STREAM"].GetBool()) flag |= Sound::Flag::STREAM;
-            if(currentFlag["LOOP"].GetBool()) flag |= Sound::Flag::LOOP;
-            if(currentFlag["NO_SPATIALIZATION"].GetBool()) flag |= Sound::Flag::NO_SPATIALIZATION;
-
-            auto sound = resources.loadSound(name, &audio.engine, soundPath, flag);
-        }
-    }
-
-    return true;
-}
 
 void windowSizeCallback(GLFWwindow *window, int width, int height)
 {
@@ -326,6 +227,8 @@ void cursorCallback(GLFWwindow *window, double xpos, double ypos)
         input.setCursor(world, pos);
     }
 }
+
+
 
 
 

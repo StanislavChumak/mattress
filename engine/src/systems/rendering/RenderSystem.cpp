@@ -1,12 +1,12 @@
-#include "RenderSystem.h"
+#include "systems/rendering/RenderSystem.h"
 
-#include "../../ECSWorld.h"
+#include "ECSWorld.h"
 #include "components/rendering/Camera.h"
 #include "components/core/Transform.h"
 #include "components/rendering/Sprite.h"
 
 #include "glm/mat4x4.hpp"
-#include <glm/gtc/matrix_transform.hpp>
+#include "glm/gtc/matrix_transform.hpp"
 
 void RenderSystem::update(ECSWorld &world, const double &delta)
 {
@@ -25,16 +25,16 @@ void RenderSystem::update(ECSWorld &world, const double &delta)
         model = glm::scale(model, glm::vec3(transform->size, 1.0f));
 
         sprite->VAO.bind();
-        sprite->shader->set_matrix4("modelMatrix", model);
-        sprite->shader->set_matrix4("projectionMatrix", camera.projection);
-        sprite->shader->set_float("layer", sprite->layer);
+        sprite->shader->setMatrix4("modelMatrix", model);
+        sprite->shader->setMatrix4("projectionMatrix", camera.projection);
+        sprite->shader->setFloat("layer", sprite->layer);
 
         sprite->texture->active();
         sprite->texture->bind();
 
         sprite->EBO.bind();
 
-        sprite->shader->set_int("textureData", 0);
+        sprite->shader->setInt("textureData", 0);
 
         glDrawElements(GL_TRIANGLES, sprite->EBO.get_count(), GL_UNSIGNED_INT, nullptr);
     }

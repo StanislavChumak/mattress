@@ -1,33 +1,63 @@
-#include "Texture2D.h"
+#include "resources/renderer/Texture2D.h"
 
 #include "glad/glad.h"
 
-Texture2D::Texture2D(const unsigned int &width, const unsigned int &height,
-                        const unsigned char *data, const int &channels,
-                        const unsigned char &number,
-                        const unsigned int &filter, const unsigned int &wrapMode)
-                    : _width(width), _height(height), _number(number), _ID(0)
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_PNG
+#include "../external/stb_image.h"
+
+#ifndef FLAG_RELEASE
+#include <iostream>
+#endif
+
+void Texture2D::fromJson(simdjson::ondemand::object obj)
 {
+    stbi_set_flip_vertically_on_load(true);
+
+    auto resultInt = obj["number"].get_int64();
+    if(!resultInt.error())
+        _number = resultInt.value();
+    
+    std::string path = std::string(getVarJSON<std::string_view>(obj["filePath"]));
+
+    int channels = 0;
+    unsigned char *pixels = stbi_load(path.c_str(), &_width, &_height, &channels, 0);
+
+#ifndef FLAG_RELEASE
+    if (!pixels) {
+        std::cerr << "Failed to load texture: " << path << std::endl;
+        return;
+    }
+#endif
+    
     switch (channels)
     {
     case 4:
-        _mode = GL_RGBA;
-        break;
+        _mode = GL_RGBA;break;
     case 3:
         _mode = GL_RGB;
     }
     glGenTextures(1, &_ID);
     glActiveTexture(GL_TEXTURE0 + _number);
     glBindTexture(GL_TEXTURE_2D, _ID);
-    glTexImage2D(GL_TEXTURE_2D, 0, _mode, _width, _height, 0, _mode, GL_UNSIGNED_BYTE, std::move(data));
+    glTexImage2D(GL_TEXTURE_2D, 0, _mode, _width, _height, 0, _mode, GL_UNSIGNED_BYTE, pixels);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMode);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapMode);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    std::vector<std::string> buffer;
+    for(auto subTexture : getVarJSON<simdjson::ondemand::array>(obj["subTextures"]))
+    {
+        buffer.push_back(std::string(getVarJSON<std::string_view>(subTexture.value())));
+    }
+    unsigned int subTextureWidth = getVarJSON<int64_t>(obj["subTextureWidth"]);
+    unsigned int subTextureHeight = getVarJSON<int64_t>(obj["subTextureHeight"]);
+    loadAtlas(buffer, subTextureWidth, subTextureHeight);
 }
 
 Texture2D &Texture2D::operator=(Texture2D &&texture2D)
@@ -57,20 +87,34 @@ Texture2D::~Texture2D()
     glDeleteTextures(1, &_ID);
 }
 
-void Texture2D::add_sub_texture(const std::string &subTextureName, const glm::vec2 &leftBottomVertex, const glm::vec2 &rightTopVertex)
+void Texture2D::loadAtlas(const std::vector<std::string> &subTextureNames, const unsigned int &subTextureWidth, const unsigned int &subTextureHeight)
 {
-    _subTexturesMap.emplace(subTextureName, SubTexture2D{leftBottomVertex, rightTopVertex});
+    unsigned int currentTextureOffsetX = 0;
+    unsigned int currentTextureOffsetY = _height;
+    for (const auto &subTextureName : subTextureNames)
+    {
+        glm::vec2 leftBottom(static_cast<float>(currentTextureOffsetX + 0.01f) / _width, static_cast<float>(currentTextureOffsetY - subTextureHeight + 0.01f) / _height);
+        glm::vec2 rigthTop(static_cast<float>(currentTextureOffsetX + subTextureWidth - 0.01f) / _width, static_cast<float>(currentTextureOffsetY - 0.01f) / _height);
+
+        _atlas.emplace(subTextureName, SubTexture2D{leftBottom, rigthTop});
+
+        currentTextureOffsetX += subTextureWidth;
+        if (currentTextureOffsetX >= _width)
+        {
+            currentTextureOffsetX = 0;
+            currentTextureOffsetY -= subTextureHeight;
+        }
+    }
 }
 
-const Texture2D::SubTexture2D &Texture2D::get_sub_texture(const std::string &subTextureName) const
+const Texture2D::SubTexture2D &Texture2D::getSubTexture(const std::string &subTextureName) const
 {
-    auto iterator = _subTexturesMap.find(subTextureName);
-    if (iterator != _subTexturesMap.end())
+    auto iterator = _atlas.find(subTextureName);
+    if (iterator == _atlas.end())
     {
-        return iterator->second;
+        std::cerr << "Fatal find subTexture \"" << subTextureName << "\"\n";
     }
-    const static SubTexture2D defaultSubTexture;
-    return defaultSubTexture;
+    return iterator->second;
 }
 
 void Texture2D::bind() const
