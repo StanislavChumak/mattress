@@ -80,6 +80,8 @@ bool Core::init(const Config& config)
     std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 #endif
 
+
+    audio.soundScale = config.SaundLocationScale;
     audio.init();
 #ifndef FLAG_RELEASE
     if(!audio.initialized)
@@ -143,6 +145,9 @@ void Core::update(float delta)
 
     systems.update(world, delta, game->currentState);
 
+    inputSystem.updateLastInput();
+    world.removeMarked();
+
     glfwSwapBuffers(window->poiter);
     resources.collectUnused();
 }
@@ -168,10 +173,10 @@ void windowSizeCallback(GLFWwindow *window, int width, int height)
         ECSWorld &world = core->world;
 
         glm::uvec2 windowSize = glm::uvec2(width, height);
-        Game game = world.getSingleComponent<Game>();
-        world.getSingleComponent<Window>().size = windowSize;
+        Game *game = world.getSingleComponent<Game>();
+        world.getSingleComponent<Window>()->size = windowSize;
 
-        const float aspectRatio = static_cast<float>(game.size.x) / game.size.y;
+        const float aspectRatio = static_cast<float>(game->size.x) / game->size.y;
         unsigned int viewPortWidth = windowSize.x;
         unsigned int viewPortHeight = windowSize.y;
         unsigned int viewPortOffsetLeft = 0;
@@ -187,10 +192,10 @@ void windowSizeCallback(GLFWwindow *window, int width, int height)
             viewPortOffsetBottom = (windowSize.y - viewPortHeight) / 2;
         }
 
-        Camera &camera = world.getSingleComponent<Camera>();
-        camera.setOffsetViewport(viewPortWidth, viewPortHeight, viewPortOffsetLeft, viewPortOffsetBottom);
-        glm::mat4 projection = glm::ortho(0.f, static_cast<float>(game.size.x), 0.f, static_cast<float>(game.size.y), -100.f, 100.f);
-        camera.projection = projection;
+        Camera *camera = world.getSingleComponent<Camera>();
+        camera->setOffsetViewport(viewPortWidth, viewPortHeight, viewPortOffsetLeft, viewPortOffsetBottom);
+        glm::mat4 projection = glm::ortho(0.f, static_cast<float>(game->size.x), 0.f, static_cast<float>(game->size.y), -100.f, 100.f);
+        camera->projection = projection;
     }
 }
 
@@ -198,14 +203,14 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 {
     Core *core = static_cast<Core*>(glfwGetWindowUserPointer(window));
     if (core)
-        core->inputSystem.setKey(core->world, key, (Input::Action)action);
+        core->inputSystem.setKey(core->world, key, action);
 }
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
     Core *core = static_cast<Core*>(glfwGetWindowUserPointer(window));
     if (core)
-        core->inputSystem.setMouseButton(core->world, button, (Input::Action)action);
+        core->inputSystem.setMouseButton(core->world, button, action);
 }
 
 void cursorCallback(GLFWwindow *window, double xpos, double ypos)
@@ -215,13 +220,13 @@ void cursorCallback(GLFWwindow *window, double xpos, double ypos)
     {
         InputSystem &input = core->inputSystem;
         ECSWorld &world = core->world;
-        glm::dvec2 offset(world.getSingleComponent<Camera>().offsetViewport);
+        glm::dvec2 offset(world.getSingleComponent<Camera>()->offsetViewport);
         glm::dvec2 pos(xpos, ypos);
         pos -= offset;
-        unsigned int gameHeight = world.getSingleComponent<Game>().size.y;
+        unsigned int gameHeight = world.getSingleComponent<Game>()->size.y;
         auto window = world.getSingleComponent<Window>();
-        double ratio = (static_cast<double>(window.size.y - offset.y * 2) / window.scale) / gameHeight;
-        pos /= window.scale * ratio;
+        double ratio = (static_cast<double>(window->size.y - offset.y * 2) / window->scale) / gameHeight;
+        pos /= window->scale * ratio;
         pos.y = gameHeight - pos.y;
 
         input.setCursor(world, pos);

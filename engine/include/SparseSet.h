@@ -19,17 +19,21 @@ class SparseSet
 public:
     SparseSet() = default;
     
-    void reserve(size_t capacity) {
+    void reserve(size_t capacity)
+    {
         dense.reserve(capacity);
         entities.reserve(capacity);
     }
 
-    TypeComponent &add(EntityID entity, TypeComponent component) {
-        if (entity >= sparse.size()) {
+    TypeComponent &add(EntityID entity, TypeComponent component)
+    {
+        if (entity >= sparse.size())
+        {
             sparse.resize(entity + 1, NULL_ENTITY);
         }
         
-        if (sparse[entity] != NULL_ENTITY) {
+        if (sparse[entity] != NULL_ENTITY)
+        {
             dense[sparse[entity]] = std::move(component);
             return dense[sparse[entity]];
         }
@@ -41,31 +45,36 @@ public:
         return dense[sparse[entity]];
     }
 
-    TypeComponent* get(EntityID entity) {
+    TypeComponent *get(EntityID entity)
+    {
         if (entity >= sparse.size()) return nullptr;
         EntityID dense_index = sparse[entity];
         if (dense_index == NULL_ENTITY) return nullptr;
         return &dense[dense_index];
     }
     
-    const TypeComponent* get(EntityID entity) const {
+    const TypeComponent *get(EntityID entity) const
+    {
         if (entity >= sparse.size()) return nullptr;
         EntityID dense_index = sparse[entity];
         if (dense_index == NULL_ENTITY) return nullptr;
         return &dense[dense_index];
     }
 
-    bool has(EntityID entity) const {
+    bool has(EntityID entity) const
+    {
         return entity < sparse.size() && sparse[entity] != NULL_ENTITY;
     }
 
-    void remove(EntityID entity) {
+    void remove(EntityID entity)
+    {
         if (!has(entity)) return;
         
         EntityID dense_index = sparse[entity];
         EntityID last_entity = entities.back();
         
-        if (dense_index != size_ - 1) {
+        if (dense_index != size_ - 1)
+        {
 
             dense[dense_index] = std::move(dense.back());
             entities[dense_index] = last_entity;
@@ -87,7 +96,8 @@ public:
     auto end() const { return dense.end(); }
 
 
-    class Iterator {
+    class Iterator
+    {
     private:
         std::vector<EntityID>& entities;
         std::vector<TypeComponent>& dense;
@@ -97,18 +107,21 @@ public:
         Iterator(std::vector<EntityID>& e, std::vector<TypeComponent>& d, size_t i) 
             : entities(e), dense(d), index(i) {}
             
-        std::pair<EntityID, TypeComponent&> operator*() {
+        std::pair<EntityID, TypeComponent&> operator*()
+        {
             return {entities[index], dense[index]};
         }
         
         Iterator& operator++() { index++; return *this; }
         bool operator!=(const Iterator& other) { return index != other.index; }
 
-        bool operator!=(const Iterator& other) const {
+        bool operator!=(const Iterator& other) const
+        {
             return index != other.index;
         }
 
-        EntityID get_entity() const {
+        EntityID get_entity() const
+        {
             return entities[index];
         }
     };
@@ -122,10 +135,12 @@ public:
     size_t capacity() const { return dense.capacity(); }
 
 
-    void clear() {
+    void clear()
+    {
         dense.clear();
         entities.clear();
-        for (auto& idx : sparse) {
+        for (auto& idx : sparse)
+        {
             idx = NULL_ENTITY;
         }
         size_ = 0;

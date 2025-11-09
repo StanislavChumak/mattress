@@ -1,11 +1,9 @@
 #ifndef SYSTEM_MANAGER_H
 #define SYSTEM_MANAGER_H
 
-#include "../../include/SystemBase.h"
-
 #include <unordered_set>
 #include <unordered_map>
-#include <memory>
+#include <functional>
 #include <vector>
 #include <string>
 #include <typeindex>
@@ -26,16 +24,18 @@ namespace SystemPriority {
     constexpr int CLEANUP = 1000;       // Очистка (самый последний)
 }
 
+class ECSWorld;
+
 class SystemManager
 {
 private:
     std::unordered_set<std::string> _states;
-    std::unordered_map<std::type_index, std::pair<int, std::unique_ptr<SystemBase>>> _systems;
-    std::unordered_map<std::string, std::vector<std::type_index>> _stateSystemsMap;
-    std::vector<std::type_index> _alwaysRunSystems;
+    std::unordered_map<std::type_index, std::pair<int, std::function<void(ECSWorld&, const double&)>>> _updates;
+    std::unordered_map<std::string, std::vector<std::type_index>> _stateUpdateMap;
+    std::vector<std::type_index> _alwaysUpdates;
 
     void rebuildCache();
-    std::vector<std::type_index> _cachedMergedSystems;
+    std::vector<std::type_index> _cachedMergedUpdates;
     bool _cacheDirty;
     std::string _cacheState;
 public:
@@ -45,20 +45,20 @@ public:
 
     bool addState(std::string state);
 
-    template <typename T, typename ...Args>
-    void registerSystem(int priority, Args& ...args)
+    template <typename T>
+    void registerUpdete(int priority)
     {
-        _systems.try_emplace(std::type_index(typeid(T)), std::make_pair(priority, std::make_unique<T>(args...)));
+        _updates.try_emplace(std::type_index(typeid(T)), std::make_pair<int, std::function<void(ECSWorld&, const double&)>>
+            (std::move(priority), [](ECSWorld &world, const double &delta) { T::update(world, delta); }));
     }
 
-    void setStateSystems(std::string state , std::vector<std::type_index> &&systems);
-    void addStateSystem(std::string state , std::type_index system);
+    void setStateUpdates(std::string state , std::vector<std::type_index> &&systems);
+    void addStateUpdate(std::string state , std::type_index system);
 
-    void registerAlwaysRunSystem(std::type_index id);
     template <typename T>
-    void registerAlwaysRunSystem()
+    void registerAlwaysUpdate()
     {
-        _alwaysRunSystems.push_back(std::type_index(typeid(T)));
+        _alwaysUpdates.push_back(std::type_index(typeid(T)));
     }
 };
 

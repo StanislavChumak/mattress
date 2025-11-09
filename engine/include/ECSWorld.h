@@ -8,14 +8,22 @@
 #include <vector>
 #include <memory>
 
-#include <stdexcept>
+#include <unordered_map>
+#include <string>
+
+#ifndef FLAG_RELEASE
+#include <iostream>
+#endif
 
 class ECSWorld
 {
 private:
-    std::vector<std::function<void(EntityID)>> _removeEntyti;
     std::vector<std::function<void()>> _clearSets;
     std::vector<std::function<void()>> _clearSingletons;
+
+    std::vector<std::function<void(EntityID)>> _removeEntyti;
+    void removeEntyti(EntityID id) { for(auto fun : _removeEntyti) fun(id); }
+    std::vector<EntityID> _destroyQueue;
 
     template<typename Component>
     struct ComponentPool
@@ -54,26 +62,41 @@ private:
     }
 
     EntityID nextEntity = 0;
-    
+    std::unordered_map<std::string, EntityID> namesEntity;
+
 public:
 
     EntityID createEntity() { return nextEntity++; }
+    void naming(EntityID id, std::string name) { namesEntity.emplace(name, id); }
+    void renaming(std::string name) { namesEntity.erase(name); }
+    EntityID getNamedEntity(std::string name)
+    { 
+        auto it = namesEntity.find(name);
+        if(it != namesEntity.end())
+            return it->second;
+#ifndef FLAG_RELEASE
+        std::cerr << "Fatal find Entity to name: " << name << std::endl;
+#endif
+        return NULL_ENTITY;
+    }
 
-    void removeEntyti(EntityID id) { for(auto fun : _removeEntyti) fun(id); }
     void clearSets() { for(auto fun : _clearSets) fun(); }
     void clearSingletons() { for(auto fun : _clearSingletons) fun(); }
+
+    void markDestroy(EntityID id) { _destroyQueue.push_back(id); }
+    void removeMarked() { for(auto id : _destroyQueue) {removeEntyti(id); }; _destroyQueue.clear(); }
 
     template<typename Component> SparseSet<Component>& getSets();
     template<typename Component> void clearSets();
     template<typename Component> bool hasSets();
 
-    template<typename Component> Component& getComponent(EntityID entity);
-    template<typename Component> Component& addComponent(EntityID entity, Component component);
+    template<typename Component> Component *getComponent(EntityID entity);
+    template<typename Component> Component &addComponent(EntityID entity, Component component);
     template<typename Component> void removeComponent(EntityID entity);
     template<typename Component> bool hasComponent(EntityID entity);
 
-    template<typename Component> Component& getSingleComponent();
-    template<typename Component> Component& addSingleComponent(Component component);
+    template<typename Component> Component *getSingleComponent();
+    template<typename Component> Component &addSingleComponent(Component component);
     template<typename Component> bool hasSingleComponent();
     template<typename Component> void removeSingleComponent();
     
@@ -103,7 +126,7 @@ bool ECSWorld::hasSets()
 
 
 template<typename Component>
-Component& ECSWorld::getComponent(EntityID entity)
+Component *ECSWorld::getComponent(EntityID entity)
 {
     return getSets<Component>().get(entity);
 }
@@ -128,13 +151,13 @@ bool ECSWorld::hasComponent(EntityID entity)
 
 
 template<typename Component>
-Component& ECSWorld::getSingleComponent()
+Component *ECSWorld::getSingleComponent()
 {
     auto& pool = getSinglePool<Component>();
     if (!pool.initialized) {
-        throw std::runtime_error("Single component not initialized");
+        return nullptr;
     }
-    return *pool.component;
+    return pool.component.get();
 }
 
 template<typename Component>

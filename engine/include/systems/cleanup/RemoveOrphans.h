@@ -1,9 +1,9 @@
-#ifndef CURSOR_FOLLOWERS_SYSTEM_H
-#define CURSOR_FOLLOWERS_SYSTEM_H
+#ifndef REMOVE_ORPHANS_H
+#define REMOVE_ORPHANS_H
 
 class ECSWorld;
 
-class CursorFollowersSystem
+class RemoveOrphans
 {
 public:
     static void update(ECSWorld &world, const double &delta);

@@ -1,14 +1,14 @@
 #ifndef ANIMATOR_SYSTEM_H
 #define ANIMATOR_SYSTEM_H
 
-#include "SystemBase.h"
+class ECSWorld;
 
-class AnimatorSystem : public SystemBase
+class AnimatorSystem
 {
 public:
     AnimatorSystem() = default;
 
-    void update(ECSWorld &world, const double &delta) override;
+    static void update(ECSWorld &world, const double &delta);
 };
 
 #endif

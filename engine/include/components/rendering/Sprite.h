@@ -4,10 +4,10 @@
 #include "../external/jsonUtils.h"
 
 #include "resources/ResourceManager.h"
-#include "resources/renderer/ShaderProgram.h"
-#include "resources/renderer/Texture2D.h"
-#include "resources/renderer/VertexArrayObject.h"
-#include "resources/renderer/BufferObject.h"
+#include "resources/ShaderProgram.h"
+#include "resources/Texture2D.h"
+#include "resources/VertexArrayObject.h"
+#include "resources/BufferObject.h"
 
 #include "glm/vec3.hpp"
 
@@ -15,11 +15,13 @@
 #include <iostream>
 #endif
 
-struct Sprite2D {
+typedef unsigned long EntityID;
+
+struct Sprite2D
+{
     std::shared_ptr<Texture2D> texture;
     std::shared_ptr<ShaderProgram> shader;
     std::vector<Texture2D::SubTexture2D> subTextures;
-    
 
     float layer = 0.f;
 
@@ -30,9 +32,7 @@ struct Sprite2D {
 
     bool visibility =  true;
 
-    Sprite2D() = default;
-
-    void fromJson(simdjson::ondemand::object obj, ResourceManager &resource)
+    void fromJson(simdjson::ondemand::object obj, EntityID id, ECSWorld &world, ResourceManager &resource)
     {
         std::string shaderName = std::string(getVarJSON<std::string_view>(obj["shaderName"]));
         std::string shaderJSON = std::string(getVarJSON<std::string_view>(obj["shaderJSON"]));

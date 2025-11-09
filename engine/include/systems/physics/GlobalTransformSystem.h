@@ -1,9 +1,9 @@
-#ifndef CURSOR_FOLLOWERS_SYSTEM_H
-#define CURSOR_FOLLOWERS_SYSTEM_H
+#ifndef GLOBAL_TRANSFORM_SYSTEM_H
+#define GLOBAL_TRANSFORM_SYSTEM_H
 
 class ECSWorld;
 
-class CursorFollowersSystem
+class GlobalTransformSystem
 {
 public:
     static void update(ECSWorld &world, const double &delta);

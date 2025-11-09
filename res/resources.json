@@ -33,17 +33,5 @@
 				"cursor"
 			]
 		}
-	],
-	"sounds": [
-		{
-			"name"       : "move",
-			"soundPath"  : "res/sounds/move.wav",
-			"flag"       : {
-				"NONE"              : true,
-				"STREAM"       		: false,
-				"LOOP"				: false,
-				"NO_SPATIALIZATION" : true
-			}
-		}
 	]
 }

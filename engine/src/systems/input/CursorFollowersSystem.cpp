@@ -6,9 +6,10 @@
 
 void CursorFollowersSystem::update(ECSWorld &world, const double &delta)
 {
-    Cursor &cursor = world.getSingleComponent<Cursor>();
+    Cursor *cursor = world.getSingleComponent<Cursor>();
+    if(!cursor) return;
     for(auto [entity, transform, follower] : world.view<Transform, CursorFollower>())
     {
-        transform->position = cursor.pos + follower->offset;
+        transform->setPosition(cursor->pos + follower->offset);
     }
 }

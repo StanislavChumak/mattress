@@ -5,12 +5,10 @@
 
 #include <functional>
 #include <string>
-#include <unordered_map>
 
 typedef unsigned long EntityID;
 class ResourceManager;
 class ECSWorld;
-
 
 struct TypeInfo {
     std::function<void(EntityID, simdjson::ondemand::object obj,
@@ -25,7 +23,7 @@ typeRegistry[#Component] = { [](EntityID entity, simdjson::ondemand::object obj,
                               ECSWorld &world, ResourceManager &resource) \
 {                                                                               \
     Component c;                                                                \
-    c.fromJson(obj, resource);                                                  \
+    c.fromJson(obj, entity, world, resource);                                   \
     world.addComponent<Component>(entity, std::move(c));                        \
 }}
 

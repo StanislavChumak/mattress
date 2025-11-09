@@ -1,17 +1,14 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
 
 #include "glm/vec2.hpp"
 
 struct  Input {
-    enum Action {
-        RELEASED,
-        PRESED,
-        HOLD
-    };
-    Action keys[349];
-    Action mouseButtons[8];
+    bool keys[349];
+    bool mouseButtons[8];
     bool lastKeys[349];
     bool lastMouseButtons[8];
 
@@ -19,13 +16,13 @@ struct  Input {
     {
         for(int i = 0; i < 349; i++)
         {
-            keys[i] = Action::HOLD;
-            lastKeys[i] = Action::HOLD;
+            keys[i] = false;
+            lastKeys[i] = false;
         }
         for(int i = 0; i < 8; i++)
         {
-            mouseButtons[i] = Action::HOLD;
-            lastMouseButtons[i] = Action::HOLD;
+            mouseButtons[i] = false;
+            lastMouseButtons[i] = false;
         }
     }
 };

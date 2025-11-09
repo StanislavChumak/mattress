@@ -1,4 +1,4 @@
-#include "resources/renderer/BufferObject.h"
+#include "resources/BufferObject.h"
 
 #include "glad/glad.h"
 

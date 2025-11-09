@@ -3,6 +3,7 @@
 
 #include "../external/jsonUtils.h"
 
+typedef unsigned long EntityID;
 class ResourceManager;
 
 struct Animator {
@@ -13,7 +14,7 @@ struct Animator {
 
     Animator() = default;
 
-    void fromJson(simdjson::ondemand::object obj, ResourceManager &resource)
+    void fromJson(simdjson::ondemand::object obj, EntityID id, ECSWorld &world, ResourceManager &resource)
     {
         std::vector<double> buffer;
         for(auto frameDuration : getVarJSON<simdjson::ondemand::array>(obj["framesDuration"]))

@@ -9,13 +9,13 @@ SystemManager::SystemManager()
 
 void SystemManager::rebuildCache()
 {
-    _cachedMergedSystems = _alwaysRunSystems;
-    _cachedMergedSystems.reserve(_alwaysRunSystems.size() + _stateSystemsMap[_cacheState].size());
+    _cachedMergedUpdates = _alwaysUpdates;
+    _cachedMergedUpdates.reserve(_alwaysUpdates.size() + _stateUpdateMap[_cacheState].size());
 
-    _cachedMergedSystems.insert(_cachedMergedSystems.end(), _stateSystemsMap[_cacheState].begin(), _stateSystemsMap[_cacheState].end());
+    _cachedMergedUpdates.insert(_cachedMergedUpdates.end(), _stateUpdateMap[_cacheState].begin(), _stateUpdateMap[_cacheState].end());
 
-    std::sort(_cachedMergedSystems.begin(), _cachedMergedSystems.end(),
-    [&](std::type_index a, std::type_index b) { return _systems[a].first > _systems[b].first; });
+    std::sort(_cachedMergedUpdates.begin(), _cachedMergedUpdates.end(),
+    [&](std::type_index a, std::type_index b) { return _updates[a].first > _updates[b].first; });
 }
 
 void SystemManager::update(ECSWorld &world, const double &delta, const std::string &currentState)
@@ -26,9 +26,9 @@ void SystemManager::update(ECSWorld &world, const double &delta, const std::stri
         rebuildCache();
     }
 
-    for(auto id : _cachedMergedSystems)
+    for(auto id : _cachedMergedUpdates)
     {
-        _systems[id].second->update(world, delta);
+        _updates[id].second(world, delta);
     }
 }
 
@@ -39,17 +39,12 @@ bool SystemManager::addState(std::string state)
     return _states.insert(state).second;
 }
 
-void SystemManager::registerAlwaysRunSystem(std::type_index id)
+void SystemManager::setStateUpdates(std::string state , std::vector<std::type_index> &&systems)
 {
-    _alwaysRunSystems.push_back(id);
+    _stateUpdateMap.try_emplace(std::move(state), std::move(systems));
 }
 
-void SystemManager::setStateSystems(std::string state , std::vector<std::type_index> &&systems)
+void SystemManager::addStateUpdate(std::string state , std::type_index system)
 {
-    _stateSystemsMap.try_emplace(std::move(state), std::move(systems));
-}
-
-void SystemManager::addStateSystem(std::string state , std::type_index system)
-{
-    _stateSystemsMap[state].push_back(system);
+    _stateUpdateMap[state].push_back(system);
 }

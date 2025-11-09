@@ -1,4 +1,4 @@
-#include "resources/renderer/ShaderProgram.h"
+#include "resources/ShaderProgram.h"
 
 #include "glad/glad.h"
 #include "glm/mat4x4.hpp"

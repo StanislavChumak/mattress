@@ -22,18 +22,19 @@ src/systems/SystemManager.cpp
 
 src/systems/input/InputSystem.cpp
 src/systems/input/CursorFollowersSystem.cpp
+src/systems/physics/GlobalTransformSystem.cpp
 src/systems/rendering/RenderSystem.cpp
 src/systems/rendering/AnimatorSystem.cpp
-
+src/systems/audio/AudioSystem.cpp
+src/systems/audio/LocationAudioSystem.cpp
+src/systems/cleanup/RemoveOrphans.cpp
 
 src/resources/ResourceManager.cpp
 
-src/resources/renderer/ShaderProgram.cpp
-src/resources/renderer/Texture2D.cpp
-src/resources/renderer/BufferObject.cpp
-src/resources/renderer/VertexArrayObject.cpp
-
-src/resources/sound/Sound.cpp
+src/resources/ShaderProgram.cpp
+src/resources/Texture2D.cpp
+src/resources/BufferObject.cpp
+src/resources/VertexArrayObject.cpp
 
 )
 

@@ -19,10 +19,12 @@ namespace engine
         glm::uvec2 gameSize;
 
         bool displayCursor = true;
-        float clearColor[4] = {0.f, 0.f, 0.f, 1.f};
+        float clearColor[4] = {0.f, 0.0f, 0.f, 1.f};
         bool depth = true;
 
         std::string initState;
+
+        int SaundLocationScale = 10;
     };
 
     class Core 

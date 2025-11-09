@@ -1,11 +1,13 @@
-#ifndef CURSOR_FOLLOWERS_SYSTEM_H
-#define CURSOR_FOLLOWERS_SYSTEM_H
+#ifndef AUDIO_SYSTEM_H
+#define AUDIO_SYSTEM_H
 
 class ECSWorld;
 
-class CursorFollowersSystem
+class AudioSystem
 {
 public:
+    AudioSystem() = default;
+
     static void update(ECSWorld &world, const double &delta);
 };
 
