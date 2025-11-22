@@ -9,9 +9,9 @@
 
 std::string exprDeploy(std::string_view expr, std::unordered_map<std::string, std::string>& defines)
 {
-    size_t posOperator = expr.find_first_of("*/");
+    size_t posOperator = expr.find_last_of("*/");
     if(posOperator == std::string::npos)
-        posOperator = expr.find_first_of("+-");
+        posOperator = expr.find_last_of("+-");
     
     if(posOperator == std::string::npos)
     {

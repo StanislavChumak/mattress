@@ -2,6 +2,11 @@
 	"#define BLOCK_SIZE 32 " : 0,
 	"shaders": [
 		{
+			"name"             : "shaderUISprite2D",
+			"pathVertexFile"   : "res/shaders/UIvertexShader2D.txt",
+			"pathFragmentFile" : "res/shaders/fragmentShader2D.txt"
+		},
+		{
 			"name"             : "shaderSprite2D",
 			"pathVertexFile"   : "res/shaders/vertexShader2D.txt",
 			"pathFragmentFile" : "res/shaders/fragmentShader2D.txt"
@@ -9,29 +14,18 @@
 	],
 	"textures": [
 		{
-			"name"             : "grassland_cell",
-			"filePath"         : "res/textures/grassland_cell.png",
-			"subTextureWidth"  : "BLOCK_SIZE",
-			"subTextureHeight" : "BLOCK_SIZE",
-			"subTextures": [
-				"grassland_cell1",
-				"grassland_cell2",
-				"grassland_cell3",
-				"grassland_cell4",
-				"grassland_cell5",
-				"grassland_cell6",
-				"grassland_cell7",
-				"grassland_cell8"
-			]
+			"name"      : "cursor",
+			"filePath"  : "res/textures/cursor.png",
+			"subWidth"  : "BLOCK_SIZE / 4",
+			"subHeight" : "BLOCK_SIZE / 4",
+			"subCount"  : 1
 		},
 		{
-			"name"             : "cursor",
-			"filePath"         : "res/textures/cursor.png",
-			"subTextureWidth"  : "BLOCK_SIZE / 4",
-			"subTextureHeight" : "BLOCK_SIZE / 4",
-			"subTextures": [
-				"cursor"
-			]
+			"name"      : "grassland_cell",
+			"filePath"  : "res/textures/grassland_cell.png",
+			"subWidth"  : "BLOCK_SIZE",
+			"subHeight" : "BLOCK_SIZE",
+			"subCount"  : 8
 		}
 	]
 }

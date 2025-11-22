@@ -50,36 +50,35 @@ void Texture2D::fromJson(simdjson::ondemand::object obj)
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    std::vector<std::string> buffer;
-    for(auto subTexture : getVarJSON<simdjson::ondemand::array>(obj["subTextures"]))
+    size_t count = getVarJSON<int64_t>(obj["subCount"]);
+    unsigned int subTextureWidth = getVarJSON<int64_t>(obj["subWidth"]);
+    unsigned int subTextureHeight = getVarJSON<int64_t>(obj["subHeight"]);
+    loadAtlas(count, subTextureWidth, subTextureHeight);
+}
+
+Texture2D::Texture2D(Texture2D &&other) noexcept
+{
+    _ID = other._ID;
+    other._ID = 0;
+    _mode = other._mode;
+    _width = other._width;
+    _height = other._height;
+    _number = other._number;
+}
+
+Texture2D &Texture2D::operator=(Texture2D &&other) noexcept
+{
+    if(this != &other)
     {
-        buffer.push_back(std::string(getVarJSON<std::string_view>(subTexture.value())));
+        glDeleteTextures(1, &_ID);
+        _ID = other._ID;
+        other._ID = 0;
+        _mode = other._mode;
+        _width = other._width;
+        _height = other._height;
+        _number = other._number;
     }
-    unsigned int subTextureWidth = getVarJSON<int64_t>(obj["subTextureWidth"]);
-    unsigned int subTextureHeight = getVarJSON<int64_t>(obj["subTextureHeight"]);
-    loadAtlas(buffer, subTextureWidth, subTextureHeight);
-}
-
-Texture2D &Texture2D::operator=(Texture2D &&texture2D)
-{
-    glDeleteTextures(1, &_ID);
-    _ID = texture2D._ID;
-    texture2D._ID = 0;
-    _mode = texture2D._mode;
-    _width = texture2D._width;
-    _height = texture2D._height;
-    _number = texture2D._number;
     return *this;
-}
-
-Texture2D::Texture2D(Texture2D &&texture2D)
-{
-    _ID = texture2D._ID;
-    texture2D._ID = 0;
-    _mode = texture2D._mode;
-    _width = texture2D._width;
-    _height = texture2D._height;
-    _number = texture2D._number;
 }
 
 Texture2D::~Texture2D()
@@ -87,16 +86,17 @@ Texture2D::~Texture2D()
     glDeleteTextures(1, &_ID);
 }
 
-void Texture2D::loadAtlas(const std::vector<std::string> &subTextureNames, const unsigned int &subTextureWidth, const unsigned int &subTextureHeight)
+void Texture2D::loadAtlas(const size_t count, const unsigned int &subTextureWidth, const unsigned int &subTextureHeight)
 {
     unsigned int currentTextureOffsetX = 0;
     unsigned int currentTextureOffsetY = _height;
-    for (const auto &subTextureName : subTextureNames)
+    _atlas.clear();
+    for(size_t i = 0; i < count; i++)
     {
         glm::vec2 leftBottom(static_cast<float>(currentTextureOffsetX + 0.01f) / _width, static_cast<float>(currentTextureOffsetY - subTextureHeight + 0.01f) / _height);
         glm::vec2 rigthTop(static_cast<float>(currentTextureOffsetX + subTextureWidth - 0.01f) / _width, static_cast<float>(currentTextureOffsetY - 0.01f) / _height);
 
-        _atlas.emplace(subTextureName, SubTexture2D{leftBottom, rigthTop});
+        _atlas.push_back(SubTexture2D{leftBottom, rigthTop});
 
         currentTextureOffsetX += subTextureWidth;
         if (currentTextureOffsetX >= _width)
@@ -107,14 +107,14 @@ void Texture2D::loadAtlas(const std::vector<std::string> &subTextureNames, const
     }
 }
 
-const Texture2D::SubTexture2D &Texture2D::getSubTexture(const std::string &subTextureName) const
+const Texture2D::SubTexture2D &Texture2D::getSubTexture(const size_t index) const
 {
-    auto iterator = _atlas.find(subTextureName);
-    if (iterator == _atlas.end())
+    if (index >= _atlas.size())
     {
-        std::cerr << "Fatal find subTexture \"" << subTextureName << "\"\n";
+        std::cerr << "Fatal find subTexture \"" << index << "\"\n";
+        return _atlas[0];
     }
-    return iterator->second;
+    return _atlas[index];
 }
 
 void Texture2D::bind() const
@@ -125,4 +125,9 @@ void Texture2D::bind() const
 void Texture2D::active() const
 {
     glActiveTexture(GL_TEXTURE0 + _number);
+}
+
+unsigned int Texture2D::id() const noexcept
+{
+    return _ID;
 }

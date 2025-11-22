@@ -115,24 +115,25 @@ bool ShaderProgram::createShader(const char *sourse, const unsigned int &shaderT
     return true;
 }
 
-ShaderProgram &ShaderProgram::operator=(ShaderProgram &&shaderProgram) noexcept
+ShaderProgram::ShaderProgram(ShaderProgram &&other) noexcept
 {
-    glDeleteProgram(_ID);
-    _ID = shaderProgram._ID;
-    _isCompiled = shaderProgram._isCompiled;
-
-    shaderProgram._ID = 0;
-    shaderProgram._isCompiled = false;
-    return *this;
+    _ID = other._ID;
+    _isCompiled = other._isCompiled;
+    other._ID = 0;
+    other._isCompiled = false;
 }
 
-ShaderProgram::ShaderProgram(ShaderProgram &&shaderProgram) noexcept
+ShaderProgram &ShaderProgram::operator=(ShaderProgram &&other) noexcept
 {
-    _ID = shaderProgram._ID;
-    _isCompiled = shaderProgram._isCompiled;
-
-    shaderProgram._ID = 0;
-    shaderProgram._isCompiled = false;
+    if(this != &other)
+    {
+        glDeleteProgram(_ID);
+        _ID = other._ID;
+        _isCompiled = other._isCompiled;
+        other._ID = 0;
+        other._isCompiled = false;
+    }
+    return *this;
 }
 
 ShaderProgram::~ShaderProgram()
@@ -162,4 +163,9 @@ void ShaderProgram::setMatrix4(const char *name, const glm::mat4 &matrix) const
 
 bool ShaderProgram::hasUniform(const char *name) const {
     return glGetUniformLocation(_ID, name) != -1;
+}
+
+unsigned int ShaderProgram::id() const noexcept
+{
+    return _ID;
 }

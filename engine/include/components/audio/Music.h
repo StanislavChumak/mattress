@@ -16,31 +16,33 @@ struct Music
     bool isPlay = false;
     bool isStop = false;
 
-    bool isLocation;
+    bool isLocation = false;
 
     Music() = default;
-    Music& operator=(const Music&) = default;
-    Music(Music &&music)
+    Music(const Music&) = delete;
+    Music& operator=(const Music&) = delete;
+    Music(Music &&other)
     {
-        this->music = music.music;
-        scaleVolume = music.scaleVolume;
+        music = other.music;
+        scaleVolume = other.scaleVolume;
+        isLocation = other.isLocation;
 
-        this->music = nullptr;
+        other.music = nullptr;
     }
-    Music &operator=(Music &&music)
+    Music &operator=(Music &&other)
     {
-        if(this->music)
-            ma_sound_uninit(this->music);
-        this->music = music.music;
-        scaleVolume = music.scaleVolume;
+        if(this == &other) return *this;
+        if(music) ma_sound_uninit(music);
+        music = other.music;
+        scaleVolume = other.scaleVolume;
+        isLocation = other.isLocation;
 
-        this->music = nullptr;
+        other.music = nullptr;
         return *this;
     }
     ~Music()
     {
-        if(music)
-            ma_sound_uninit(music);
+        if(music) ma_sound_uninit(music);
     }
 
     virtual void fromJson(simdjson::ondemand::object obj, EntityID id, ECSWorld &world, ResourceManager &resource)
@@ -53,7 +55,8 @@ struct Music
         auto resultDouble = obj["scaleVolume"].get_double();
         if(!resultDouble.error()) scaleVolume = resultDouble.value();
 
-        isLocation = getVarJSON<bool>(obj["location"]);
+        auto resultBool = obj["location"].get_bool();
+        if(!resultBool.error()) isLocation = resultDouble.value();
 
         ma_result resultSound = ma_sound_init_from_file(&audio->engine, path.c_str(), (isLocation ? 0 : MA_SOUND_FLAG_NO_SPATIALIZATION) | MA_SOUND_FLAG_STREAM | MA_SOUND_FLAG_LOOPING, nullptr, nullptr, music);
 #ifndef FLAG_RELEASE

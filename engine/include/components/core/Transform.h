@@ -8,36 +8,34 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 typedef unsigned long EntityID;
+class ECSWorld;
 class ResourceManager;
 
-struct Transform {
+struct Transform
+{
     glm::vec2 position;
-    glm::vec2 worldPosition;
     glm::vec2 scaleSize;
     float rotation;
 
     glm::mat4 localMatrix{1.0f};
-    glm::mat4 worldMatrix{1.0f};
+    glm::mat4 globalMatrix{1.0f};
 
     bool dirty{true};
 
     void fromJson(simdjson::ondemand::object obj, EntityID id, ECSWorld &world, ResourceManager &resource)
     {
-        position.x = getVarJSON<int64_t>(obj["pos_x"]); 
-        position.y = getVarJSON<int64_t>(obj["pos_y"]);
-        scaleSize.x = getVarJSON<int64_t>(obj["scaleSize_x"]);
-        scaleSize.y = getVarJSON<int64_t>(obj["scaleSize_y"]);
+        position.x = getVarJSON<double>(obj["pos_x"]); 
+        position.y = getVarJSON<double>(obj["pos_y"]);
+        scaleSize.x = getVarJSON<double>(obj["scaleSize_x"]);
+        scaleSize.y = getVarJSON<double>(obj["scaleSize_y"]);
         rotation = getVarJSON<double>(obj["rotation"]);
     }
 
     void updateLocalMatrix()
     {
-        glm::mat4 m(1.0f);
-        m = glm::translate(m, glm::vec3(0.5f * scaleSize.x + position.x, 0.5f * scaleSize.y + position.y, 0.0f));
-        m = glm::rotate(m, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
-        m = glm::translate(m, glm::vec3(-0.5f * scaleSize.x, -0.5f * scaleSize.y, 0.0f));
-        m = glm::scale(m, glm::vec3(scaleSize, 1.0f));
-        localMatrix = m;
+        localMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
+        localMatrix = glm::rotate(localMatrix, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
+        localMatrix = glm::scale(localMatrix, glm::vec3(scaleSize, 1.0f));
         dirty = false;
     }
 

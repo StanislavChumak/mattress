@@ -7,7 +7,7 @@
 #include "resources/ResourceManager.h"
 
 struct Window;
-struct Game;
+struct States;
 
 namespace engine
 {
@@ -16,10 +16,10 @@ namespace engine
         std::string executablePath;
         std::string nameWindow = "";
         unsigned int pixelScale = 1;
-        glm::uvec2 gameSize;
+        glm::uvec2 pixelSize;
 
         bool displayCursor = true;
-        float clearColor[4] = {0.f, 0.0f, 0.f, 1.f};
+        float clearColor[4] = {0.2f, 0.0f, 0.3f, 1.f};
         bool depth = true;
 
         std::string initState;
@@ -30,7 +30,7 @@ namespace engine
     class Core 
     {
         Window *window;
-        Game *game;
+        States *states;
     public:
         ResourceManager resources;
         ECSWorld world;
@@ -40,6 +40,7 @@ namespace engine
         
         bool init(const Config& config);
         void loadJsonComponent(std::string pathJsonResource);
+        void predUpate();
         void update(float delta);
         void shutdown();
 

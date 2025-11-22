@@ -1,7 +1,7 @@
-#version 330 core
+#version 420 core
 
-in vec3 color;
-in vec2 texturePosition;
+in vec4 color;
+in vec2 UV;
 
 out vec4 fragColor;
 
@@ -9,7 +9,7 @@ uniform sampler2D textureData;
 
 void main()
 {
-    fragColor = texture(textureData, texturePosition) * vec4(color, 1.0);
+    fragColor = texture(textureData, UV) * color;
     if (fragColor.a == 0.0f)
     {
         discard;

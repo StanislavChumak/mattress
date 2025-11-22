@@ -5,6 +5,8 @@
 
 #include <unordered_map>
 #include <memory>
+#include <vector>
+#include <functional>
 
 class ResourceManager
 {
@@ -13,24 +15,49 @@ private:
     simdjson::ondemand::parser _resourceParser;
     simdjson::ondemand::parser _parser;
 
-    std::unordered_map<std::string, std::weak_ptr<void>> _resourceCache;
+    std::vector<std::function<void()>> _garbageCollectors;
+
+    template<typename Resource>
+    struct cacheWrapper
+    {
+        std::unordered_map<std::string, std::weak_ptr<Resource>> cache;
+        bool initialization = false;
+    };
+
 public:
-    ResourceManager() = default;
+    template<typename Resource>
+    std::unordered_map<std::string, std::weak_ptr<Resource>> &getCache()
+    {
+        static cacheWrapper<Resource> wrapper;
+        if(!wrapper.initialization)
+        {
+            _garbageCollectors.push_back([&]()
+            {
+                for (auto it = wrapper.cache.begin(); it != wrapper.cache.end(); )
+                    if (it->second.expired())
+                        it = wrapper.cache.erase(it);
+                    else
+                        ++it;
+            });
+            wrapper.initialization = true;
+        }
+        return wrapper.cache;
+    }
+
+    void garbageCollector();
 
     simdjson::simdjson_result<simdjson::ondemand::document> getJSON(const std::string& path, bool isResource = false);
-
-    void collectUnused();
 
     template<typename Resource>
     std::shared_ptr<Resource> getResource(const std::string &resourceName,
                                         const std::string& json,
                                         const std::string& arrayKey)
     {
-        auto it = _resourceCache.find(resourceName);
-        if(it != _resourceCache.end())
+        auto &cache = getCache<Resource>();
+        auto it = cache.find(resourceName);
+        if(it != cache.end())
             if(auto existing = it->second.lock())
                 return std::static_pointer_cast<Resource>(existing);
-        
         auto resultDocument = getJSON(json, true);
         if(resultDocument.error())
             throw std::runtime_error("Failed to parse JSON");
@@ -43,7 +70,7 @@ public:
             {
                 std::shared_ptr<Resource> resource = std::make_shared<Resource>();
                 resource->fromJson(obj);
-                _resourceCache[resourceName] = resource;
+                cache[resourceName] = resource;
                 return resource;
             }
         }

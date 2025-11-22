@@ -8,31 +8,42 @@ VertexArrayObject::VertexArrayObject()
     glGenVertexArrays(1, &_id);
 }
 
-VertexArrayObject::~VertexArrayObject()
+VertexArrayObject::~VertexArrayObject() noexcept
 {
     glDeleteVertexArrays(1, &_id);
+    _id = 0;
 }
 
-VertexArrayObject &VertexArrayObject::operator=(VertexArrayObject &&vertexArrayObjectr) noexcept
+VertexArrayObject::VertexArrayObject(VertexArrayObject &&other) noexcept
 {
-    _id = vertexArrayObjectr._id;
-    vertexArrayObjectr._id = 0;
+    _id = other._id;
+    other._id = 0;
+}
+
+VertexArrayObject &VertexArrayObject::operator=(VertexArrayObject &&other) noexcept
+{
+    if(this != &other)
+    {
+        _id = other._id;
+        other._id = 0;
+    }
     return *this;
 }
 
-VertexArrayObject::VertexArrayObject(VertexArrayObject &&vertexArrayObjectr) noexcept
-{
-    _id = vertexArrayObjectr._id;
-    vertexArrayObjectr._id = 0;
-}
-
-void VertexArrayObject::add_buffer_float(const BufferObject &buffer, const unsigned int size, const unsigned int stride, const unsigned int offset)
+void VertexArrayObject::addBufferFloat(cuint index, const BufferObject &buffer, cuint size, cuint stride, cuint offset)
 {
     bind();
     buffer.bind();
-    glEnableVertexAttribArray(_index);
-    glVertexAttribPointer(_index, static_cast<GLint>(size), GL_FLOAT, GL_FALSE, stride * sizeof(GLfloat), (GLvoid *)(offset * sizeof(GLfloat)));
-    _index++;
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, static_cast<GLint>(size), GL_FLOAT, GL_FALSE, stride, (GLvoid *)offset);
+}
+
+void VertexArrayObject::addBufferByte(cuint index, const BufferObject &buffer, cuint size, cuint stride, cuint offset)
+{
+    bind();
+    buffer.bind();
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, static_cast<GLint>(size), GL_UNSIGNED_BYTE, GL_TRUE, stride, (GLvoid *)offset);
 }
 
 void VertexArrayObject::bind() const

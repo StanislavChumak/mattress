@@ -1,4 +1,4 @@
-#include "systems/physics/GlobalTransformSystem.h"
+#include "systems/transform/GlobalTransformSystem.h"
 
 #include "components/core/ParentChildren.h"
 #include "components/core/Transform.h"
@@ -12,9 +12,9 @@ void updateTree(ECSWorld &world, EntityID id, glm::mat4 parentMatrix)
 
     if(transform)
     {
-        if(transform->dirty) transform->updateLocalMatrix();
-        transform->worldMatrix = parentMatrix * transform->localMatrix;
-        parentMatrix = transform->worldMatrix;
+        transform->updateLocalMatrix();
+        transform->globalMatrix = parentMatrix * transform->localMatrix;
+        parentMatrix = transform->globalMatrix;
     }
     if(children)
     {

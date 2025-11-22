@@ -164,7 +164,7 @@ template<typename Component>
 Component& ECSWorld::addSingleComponent(Component component)
 {
     auto& pool = getSinglePool<Component>();
-    pool.component = std::make_unique<Component>(component);
+    pool.component = std::make_unique<Component>(std::move(component));
     pool.initialized = true;
     return *pool.component;
 }

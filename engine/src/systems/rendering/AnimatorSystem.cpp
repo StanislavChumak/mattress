@@ -12,25 +12,17 @@ void AnimatorSystem::update(ECSWorld &world, const double &delta)
     {
         animator->currentAnimationTime += delta;
 
-        while (animator->currentAnimationTime >= animator->framesDuration[animator->currentFrame])
+        while (animator->currentAnimationTime >= animator->durations[animator->currentFrame])
         {
-            animator->currentAnimationTime -= animator->framesDuration[animator->currentFrame];
-            ++animator->currentFrame;
+            animator->currentAnimationTime -= animator->durations[animator->currentFrame];
+            animator->currentFrame++;
 
-            if (animator->currentFrame == animator->framesCount)
+            if (animator->currentFrame == animator->count + animator->offset)
             {
-                animator->currentFrame = 0;
+                animator->currentFrame = animator->offset;
             }
 
-            const Texture2D::SubTexture2D &nextSubTexture = sprite->subTextures[animator->currentFrame];
-
-            const GLfloat textureCoords[] = {
-            nextSubTexture.rightTopVertex.x, nextSubTexture.rightTopVertex.y,    // right top
-            nextSubTexture.rightTopVertex.x, nextSubTexture.leftBottomVertex.y,  // right bottom
-            nextSubTexture.leftBottomVertex.x, nextSubTexture.rightTopVertex.y,  // left top
-            nextSubTexture.leftBottomVertex.x, nextSubTexture.leftBottomVertex.y // left bottom
-            };
-            sprite->VBOtex.update(textureCoords, sizeof(textureCoords), 0);
+            sprite->subTexture = sprite->texture->getSubTexture(animator->currentFrame);
         }
     }
 }

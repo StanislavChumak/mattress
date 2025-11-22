@@ -21,7 +21,6 @@ struct Audio
         config.listenerCount = 1;
         if (ma_engine_init(&config, &engine) == MA_SUCCESS)
             initialized = true;
-        ma_engine_listener_set_direction(&engine, 0, 0, 0, 1.f);
     }
 
     void destroy()

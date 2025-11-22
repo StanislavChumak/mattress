@@ -4,27 +4,22 @@
 #include "GLFW/glfw3.h"
 #include "glm/vec2.hpp"
 
-#include "components/registerComponent.h"
-#include "components/core/Name.h"
-#include "components/core/ParentChildren.h"
-#include "components/core/Transform.h"
-#include "components/rendering/Sprite.h"
-#include "components/rendering/Animator.h"
-#include "components/ui/Cursor.h"
-#include "components/audio/Sound.h"
-#include "components/audio/Listener.h"
+#define INCLUDE_CORE_COMPONENTS
+#define INCLUDE_SPRITE
+#define INCLUDE_ANIMATION
+#define INCLUDE_SOUNDS
+#define INCLUDE_LOCATION_SOUNDS
 
-#include "systems/physics/GlobalTransformSystem.h"
-#include "systems/rendering/RenderSystem.h"
-#include "systems/rendering/AnimatorSystem.h"
-#include "systems/input/CursorFollowersSystem.h"
-#include "systems/audio/AudioSystem.h"
-#include "systems/audio/LocationAudioSystem.h"
+#include "presets.h"
+
+
+#include "components/ui/Cursor.h"
+#include "systems/transform/CursorFollowersSystem.h"
 
 #define BLOCK_SIZE 32
 #define SCALE 3
-#define GAME_WIDTH 9 * BLOCK_SIZE
-#define GAME_HEIGTH 7 * BLOCK_SIZE
+#define GAME_WIDTH 8 * BLOCK_SIZE
+#define GAME_HEIGTH 6 * BLOCK_SIZE
 
 class SoundCursorSystem
 {
@@ -37,33 +32,23 @@ int main(int argc, char **argv)
     engine::Core engine;
 
     engine::Config config;
-    config.gameSize = glm::vec2(GAME_WIDTH, GAME_HEIGTH);
+    config.pixelSize = glm::vec2(GAME_WIDTH, GAME_HEIGTH);
     config.nameWindow = "Engine";
     config.pixelScale = SCALE;
     config.executablePath = *argv;
     config.displayCursor = false;
 
-    REGISTER_COMPONENT(Name);
-    REGISTER_COMPONENT(Parent);
-    REGISTER_COMPONENT(Children);
-    REGISTER_COMPONENT(Transform);
-    REGISTER_COMPONENT(Sprite2D);
-    REGISTER_COMPONENT(Animator);
+    REGISTER_CORE_COMPONENTS(engine);
+    REGISTER_SPRITE(engine);
+    REGISTER_ANIMATION(engine);
+    REGISTER_SOUNDS(engine);
+    REGISTER_LOCATION_SOUNDS(engine);
+    
+    
     REGISTER_COMPONENT(CursorFollower);
-    REGISTER_COMPONENT(Sound);
-
-    engine.systems.registerUpdete<GlobalTransformSystem>(SystemPriority::PHYSICS);
-    engine.systems.registerAlwaysUpdate<GlobalTransformSystem>();
-    engine.systems.registerUpdete<RenderSystem>(SystemPriority::RENDERING);
-    engine.systems.registerAlwaysUpdate<RenderSystem>();
-    engine.systems.registerUpdete<AnimatorSystem>(SystemPriority::ANIMATION);
-    engine.systems.registerAlwaysUpdate<AnimatorSystem>();
     engine.systems.registerUpdete<CursorFollowersSystem>(SystemPriority::INPUT);
     engine.systems.registerAlwaysUpdate<CursorFollowersSystem>();
-    engine.systems.registerUpdete<AudioSystem>(SystemPriority::AUDIO);
-    engine.systems.registerAlwaysUpdate<AudioSystem>();
-    engine.systems.registerUpdete<LocationAudioSystem>(SystemPriority::AUDIO);
-    engine.systems.registerAlwaysUpdate<LocationAudioSystem>();
+    
     engine.systems.registerUpdete<SoundCursorSystem>(SystemPriority::AUDIO);
     engine.systems.registerAlwaysUpdate<SoundCursorSystem>();
     
@@ -71,10 +56,11 @@ int main(int argc, char **argv)
 
     engine.loadJsonComponent("res/components.json");
     
-    engine.world.addSingleComponent(Listener{engine.world.getNamedEntity("cursor")});
+    engine.world.getSingleComponent<Listener>()->target = engine.world.getNamedEntity("center");
+    engine.world.getSingleComponent<Camera>()->target = engine.world.getNamedEntity("center");
 
+    engine.predUpate();
     double lastTime = glfwGetTime(), currentTime, delta;
-
     while (!engine.isCloseWindow())
     {
         currentTime = glfwGetTime();

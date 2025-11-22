@@ -30,5 +30,5 @@ void main()
     vec2 rotated = vec2(local.x * c - local.y * s, local.x * s + local.y * c);
     vec3 world = vec3(aPosition + rotated, aLayer);
 
-    gl_Position = projection * view * vec4(world, 1.0);
+    gl_Position = projection * vec4(world, 1.0);
 }

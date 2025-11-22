@@ -12,8 +12,8 @@ public:
     void fromJson(simdjson::ondemand::object obj);
     ShaderProgram(const ShaderProgram &) = delete;
     ShaderProgram &operator=(const ShaderProgram &) = delete;
-    ShaderProgram &operator=(ShaderProgram &&shaderProgram) noexcept;
-    ShaderProgram(ShaderProgram &&shaderProgram) noexcept;
+    ShaderProgram(ShaderProgram &&other) noexcept;
+    ShaderProgram &operator=(ShaderProgram &&other) noexcept;
     ~ShaderProgram();
 
     bool isCompiled() const { return _isCompiled; };
@@ -23,8 +23,9 @@ public:
     void setMatrix4(const char* name,  const glm::mat4 &matrix) const;
     bool hasUniform(const char *name) const;
 
-
+    unsigned int id() const noexcept;
 private:
+
     bool createShader(const char *sourse, const unsigned int &shaderType, unsigned int &shaderID);
     bool _isCompiled = false;
     unsigned int _ID = 0;

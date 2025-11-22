@@ -9,19 +9,20 @@ class ResourceManager;
 struct Animator {
     unsigned short currentFrame = 0;
     double currentAnimationTime = 0;
-    unsigned short framesCount = 0;
-    std::vector<double> framesDuration;
+    unsigned short count = 0;
+    unsigned short offset = 0;
+    std::vector<double> durations;
 
     Animator() = default;
 
     void fromJson(simdjson::ondemand::object obj, EntityID id, ECSWorld &world, ResourceManager &resource)
     {
         std::vector<double> buffer;
-        for(auto frameDuration : getVarJSON<simdjson::ondemand::array>(obj["framesDuration"]))
+        for(auto frameDuration : getVarJSON<simdjson::ondemand::array>(obj["durations"]))
         {
-            framesDuration.push_back(getVarJSON<double>(frameDuration.value()));
+            durations.push_back(getVarJSON<double>(frameDuration.value()));
         }
-        framesCount = framesDuration.size();
+        count = durations.size();
     }
 };
 

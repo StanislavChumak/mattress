@@ -1,16 +1,17 @@
 #include "Engine.h"
 
-#include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "glm/vec2.hpp"
 
 #include "components/core/Window.h"
-#include "components/core/Game.h"
+#include "components/core/States.h"
 #include "components/rendering/Camera.h"
 #include "components/audio/Audio.h"
 #include "components/ui/Cursor.h"
 
 #include "components/registerComponent.h"
+
+#include "resources/RenderContext.h"
+#include "systems/rendering/SpriteRenderSystem.h"
 
 #ifndef FLAG_RELEASE
 #include <iostream>
@@ -27,9 +28,8 @@ Core::Core():inputSystem(world.addSingleComponent(Input{})){}
 
 bool Core::init(const Config& config)
 {
-    window = &world.addSingleComponent(Window(config.gameSize * config.pixelScale, config.nameWindow.c_str(), config.pixelScale));
-    game = &world.addSingleComponent(Game{config.gameSize, config.initState});
-    Audio &audio = world.addSingleComponent(Audio{});
+    window = &world.addSingleComponent(Window(config.pixelSize * config.pixelScale, config.nameWindow.c_str(), config.pixelScale));
+    states = &world.addSingleComponent(States{config.initState});
 
     world.addSingleComponent(Cursor{});
 
@@ -40,8 +40,8 @@ bool Core::init(const Config& config)
         return false;
 #endif
     }
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     window->poiter = glfwCreateWindow(window->size.x, window->size.y, window->name, nullptr, nullptr);
@@ -80,20 +80,24 @@ bool Core::init(const Config& config)
     std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 #endif
 
+    Camera &camera = world.addSingleComponent(Camera(config.pixelSize));
 
-    audio.soundScale = config.SaundLocationScale;
-    audio.init();
-#ifndef FLAG_RELEASE
-    if(!audio.initialized)
+    Audio *audio = world.getSingleComponent<Audio>();
+    if(audio)
     {
-        std::cerr << "Failed to init sound engine" << std::endl;
-        glfwTerminate();
-        return false;
-    }
+        audio->soundScale = config.SaundLocationScale;
+        audio->init();
+#ifndef FLAG_RELEASE
+        if(!audio->initialized)
+        {
+            std::cerr << "Failed to init sound engine" << std::endl;
+            glfwTerminate();
+            return false;
+        }
 #endif
+    }
     
     glfwSetWindowUserPointer(window->poiter, this);
-
 
     if(!config.displayCursor) glfwSetInputMode(window->poiter, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
@@ -101,10 +105,12 @@ bool Core::init(const Config& config)
     
     if(config.depth) glEnable(GL_DEPTH_TEST);
 
-    world.addSingleComponent(Camera{});
-
     glfwSetWindowSize(window->poiter, window->size.x, window->size.y);
     windowSizeCallback(window->poiter, window->size.x, window->size.y);
+
+    std::shared_ptr<RenderContext> context = std::make_shared<RenderContext>();
+    resources.getCache<RenderContext>()["context"] = context;
+    SpriteRenderSystem::context = std::move(context);
     
     return true;
 }
@@ -117,45 +123,38 @@ void Core::loadJsonComponent(std::string pathJsonComponent)
         EntityID id = world.createEntity();
         for(auto field : entity)
         {
-            auto keyResult = field.unescaped_key();
-            auto valueResult = field.value().get_object();
-#ifndef FLAG_RELEASE
-            if (keyResult.error()) {
-                std::cerr << "Key read error: " << simdjson::error_message(keyResult.error()) << std::endl;
-                continue;
-            }
-            if (valueResult.error()) {
-                std::cerr << "Value read error for component '" << keyResult.value()
-                        << "': " << simdjson::error_message(valueResult.error()) << std::endl;
-                continue;
-            }
-#endif      
-            std::string_view name = keyResult.value();
-            simdjson::ondemand::object obj = valueResult.value();
+            std::string_view name = getResultJSON<std::string_view>(field.unescaped_key());
+            simdjson::ondemand::object obj = getVarJSON<simdjson::ondemand::object>(field.value());
             typeRegistry[std::string(name)].addComponentFromJson(id, obj, world, resources);
         }
     }
 }
 
+void Core::predUpate()
+{
+    windowSizeCallback(window->poiter, window->size.x, window->size.y);
+}
 
 void Core::update(float delta)
 {
     glfwPollEvents();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    systems.update(world, delta, game->currentState);
+    systems.update(world, delta, states->currentSystemState);
 
     inputSystem.updateLastInput();
     world.removeMarked();
 
     glfwSwapBuffers(window->poiter);
-    resources.collectUnused();
+    resources.garbageCollector();
 }
 
 void Core::shutdown()
 {
+    SpriteRenderSystem::context.reset();
     world.clearSets();
     world.clearSingletons();
+    resources.garbageCollector();
     glfwTerminate();
 }
 
@@ -170,13 +169,11 @@ void windowSizeCallback(GLFWwindow *window, int width, int height)
     Core *core = static_cast<Core*>(glfwGetWindowUserPointer(window));
     if (core)
     {
-        ECSWorld &world = core->world;
-
         glm::uvec2 windowSize = glm::uvec2(width, height);
-        Game *game = world.getSingleComponent<Game>();
-        world.getSingleComponent<Window>()->size = windowSize;
+        core->world.getSingleComponent<Window>()->size = windowSize;
+        Camera *camera = core->world.getSingleComponent<Camera>();
 
-        const float aspectRatio = static_cast<float>(game->size.x) / game->size.y;
+        const float aspectRatio = static_cast<float>(camera->pixelSize.x) / camera->pixelSize.y;
         unsigned int viewPortWidth = windowSize.x;
         unsigned int viewPortHeight = windowSize.y;
         unsigned int viewPortOffsetLeft = 0;
@@ -192,10 +189,8 @@ void windowSizeCallback(GLFWwindow *window, int width, int height)
             viewPortOffsetBottom = (windowSize.y - viewPortHeight) / 2;
         }
 
-        Camera *camera = world.getSingleComponent<Camera>();
         camera->setOffsetViewport(viewPortWidth, viewPortHeight, viewPortOffsetLeft, viewPortOffsetBottom);
-        glm::mat4 projection = glm::ortho(0.f, static_cast<float>(game->size.x), 0.f, static_cast<float>(game->size.y), -100.f, 100.f);
-        camera->projection = projection;
+        camera->updateProjectionMatrix();
     }
 }
 
@@ -218,18 +213,17 @@ void cursorCallback(GLFWwindow *window, double xpos, double ypos)
     Core *core = static_cast<Core*>(glfwGetWindowUserPointer(window));
     if (core)
     {
-        InputSystem &input = core->inputSystem;
-        ECSWorld &world = core->world;
-        glm::dvec2 offset(world.getSingleComponent<Camera>()->offsetViewport);
+        Camera *camera = core->world.getSingleComponent<Camera>();
+        Window *window = core->world.getSingleComponent<Window>();
+        glm::dvec2 offset(camera->offsetViewport);
         glm::dvec2 pos(xpos, ypos);
         pos -= offset;
-        unsigned int gameHeight = world.getSingleComponent<Game>()->size.y;
-        auto window = world.getSingleComponent<Window>();
-        double ratio = (static_cast<double>(window->size.y - offset.y * 2) / window->scale) / gameHeight;
+        unsigned int pixelHeight = camera->pixelSize.y;
+        double ratio = (static_cast<double>(window->size.y - offset.y * 2) / window->scale) / pixelHeight;
         pos /= window->scale * ratio;
-        pos.y = gameHeight - pos.y;
+        pos.y = pixelHeight - pos.y;
 
-        input.setCursor(world, pos);
+        core->inputSystem.setCursor(core->world, pos);
     }
 }
 

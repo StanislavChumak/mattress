@@ -21,20 +21,25 @@ src/jsonUtils.cpp
 src/systems/SystemManager.cpp
 
 src/systems/input/InputSystem.cpp
-src/systems/input/CursorFollowersSystem.cpp
-src/systems/physics/GlobalTransformSystem.cpp
-src/systems/rendering/RenderSystem.cpp
+src/systems/transform/CursorFollowersSystem.cpp
+src/systems/transform/GlobalTransformSystem.cpp
+src/systems/rendering/CameraSystem.cpp
+src/systems/rendering/SpriteRenderSystem.cpp
 src/systems/rendering/AnimatorSystem.cpp
+src/systems/rendering/StateAnimatorSystem.cpp
 src/systems/audio/AudioSystem.cpp
 src/systems/audio/LocationAudioSystem.cpp
 src/systems/cleanup/RemoveOrphans.cpp
 
 src/resources/ResourceManager.cpp
 
+src/resources/RenderContext.cpp
+src/resources/SpriteBatch.cpp
 src/resources/ShaderProgram.cpp
 src/resources/Texture2D.cpp
 src/resources/BufferObject.cpp
 src/resources/VertexArrayObject.cpp
+
 
 )
 

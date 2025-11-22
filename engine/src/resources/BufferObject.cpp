@@ -6,38 +6,30 @@
 #include <iostream>
 #endif
 
-
-BufferObject::BufferObject(){}
-BufferObject::~BufferObject()
+BufferObject::~BufferObject() noexcept
 {
-    glDeleteBuffers(1, &_id);
+    if(_id) glDeleteBuffers(1, &_id);
 }
 
-BufferObject &BufferObject::operator=(BufferObject &&buffer) noexcept
+BufferObject &BufferObject::operator=(BufferObject &&other) noexcept
 {
-    _id = buffer._id;
-    _mode = buffer._mode;
-    if(_mode == GL_ELEMENT_ARRAY_BUFFER)
+    if(this != &other)
     {
-        _countVertex = buffer._countVertex;
-        buffer._countVertex = 0;
+        if(_id) glDeleteBuffers(1, &_id);
+        _id = other._id;
+        _mode = other._mode;
+        other._id = 0;
+        other._mode = 0;
     }
-    buffer._id = 0;
-    buffer._mode = 0;
     return *this;
 }
 
-BufferObject::BufferObject(BufferObject &&buffer) noexcept
+BufferObject::BufferObject(BufferObject &&other) noexcept
 {
-    _id = buffer._id;
-    _mode = buffer._mode;
-    if(_mode == GL_ELEMENT_ARRAY_BUFFER)
-    {
-        _countVertex = buffer._countVertex;
-        buffer._countVertex = 0;
-    }
-    buffer._id = 0;
-    buffer._mode = 0;
+    _id = other._id;
+    _mode = other._mode;
+    other._id = 0;
+    other._mode = 0;
 }
 
 void BufferObject::init(const unsigned int &mode, const void *data, unsigned int size, unsigned int usage)
@@ -46,7 +38,6 @@ void BufferObject::init(const unsigned int &mode, const void *data, unsigned int
     glGenBuffers(1, &_id);
     glBindBuffer(_mode, _id);
     glBufferData(_mode, size, data, usage);
-    if(_mode == GL_ELEMENT_ARRAY_BUFFER) _countVertex = size / sizeof(unsigned int);
 }
 
 void BufferObject::update(const void *data, const unsigned int size, const unsigned int offset) const
@@ -72,7 +63,19 @@ void BufferObject::bind() const
     glBindBuffer(_mode, _id);
 }
 
-void BufferObject::unbind() const
+void BufferObject::bindBase(unsigned int index)
+{
+#ifndef FLAG_RELEASE
+    if (_id == 0) {
+        std::cerr << "ERROR: Attempt to update uninitialized buffer." << std::endl;
+        return;
+    }
+#endif
+    glBindBuffer(_mode, _id);
+    glBindBufferBase(_mode, index, _id);
+}
+
+void BufferObject::unbind() const noexcept
 {
     glBindBuffer(_mode, 0);
 }

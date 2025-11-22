@@ -19,40 +19,35 @@ struct Sound
     bool isPlay = false;
     bool isStop = false;
 
-    bool isLocation;
+    bool isLocation = false;
 
     Sound() = default;
-    Sound &operator=(const Sound&) = default;
-    Sound(Sound &&sound)
+    Sound(const Sound&) = delete;
+    Sound &operator=(const Sound&) = delete;
+    Sound(Sound &&other)
     {
-        instances = sound.instances;
-        count = sound.count;
-        scaleVolume = sound.scaleVolume;
-        isLocation = sound.isLocation;
+        instances = other.instances;
+        count = other.count;
+        scaleVolume = other.scaleVolume;
+        isLocation = other.isLocation;
 
-        sound.instances.clear();
+        other.instances.clear();
     }
-    Sound &operator=(Sound &&sound)
+    Sound &operator=(Sound &&other)
     {
-        for(auto sound : instances)
-            ma_sound_uninit(sound);
-        instances = sound.instances;
-        count = sound.count;
-        scaleVolume = sound.scaleVolume;
-        isLocation = sound.isLocation;
+        if(this == &other) return *this;
+        for(auto sound : instances) ma_sound_uninit(sound);
+        instances = other.instances;
+        count = other.count;
+        scaleVolume = other.scaleVolume;
+        isLocation = other.isLocation;
 
-        sound.instances.clear();
+        other.instances.clear();
         return *this;
     }
     ~Sound()
     {
-        for(auto sound : instances)
-            ma_sound_uninit(sound);
-    }
-
-    void init(ma_engine *engine, const char *path)
-    {
-        
+        for(auto sound : instances) ma_sound_uninit(sound);
     }
 
     void fromJson(simdjson::ondemand::object obj, EntityID id, ECSWorld &world, ResourceManager &resource)
@@ -68,8 +63,8 @@ struct Sound
         auto resultDouble = obj["scaleVolume"].get_double();
         if(!resultDouble.error()) scaleVolume = resultDouble.value();
 
-        isLocation = getVarJSON<bool>(obj["location"]);
-        
+        auto resultBool = obj["location"].get_bool();
+        if(!resultBool.error()) isLocation = resultBool.value();
 
         for(int i = 0; i < count; i++)
         {

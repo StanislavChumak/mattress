@@ -1,121 +1,66 @@
 {
     "#define BLOCK_SIZE 32 " : 0,
-    "#define GRASSLAND_CELL 0" : 0,
 
     "entities" : [
         {
-            "Name" : { "value" : "cursor"},
-            "Transform" : { "pos_x" : 0, "pos_y" : 0, "scaleSize_x" : 1, "scaleSize_y" : 1, "rotation" : 0.0},
-            "CursorFollower" : { "offset_x" : 0, "offset_y" : 0 }
-        },
-        {
-            "Transform" : { "pos_x" : 0, "pos_y" : 0, "scaleSize_x" : "BLOCK_SIZE / 4", "scaleSize_y" : "BLOCK_SIZE / 4", "rotation" : 0.0},
+            "Name" : { "value" : "cursor" },
+            "Transform" : { "pos_x" : 100, "pos_y" : 100, "scaleSize_x" : 1, "scaleSize_y" : 1, "rotation" : 0.0},
+            "CursorFollower" : { "offset_x" : 0, "offset_y" : 0 },
+            "Sound" : { "path" : "res/sounds/move.wav", "count" : 8, "location" : true},
             "Sprite2D"  : { 
-                "shaderName" : "shaderSprite2D",
+                "shaderName" : "shaderUISprite2D",
                 "shaderJSON" : "res/resources.json",
                 "textureName" : "cursor",
                 "textureJSON" : "res/resources.json",
-                "subTextures" : [ "cursor" ],
-                "layer" : 1.0,
-                "usage" : "dynamic"
-            },
-            "Parent" : { "name" : "cursor" }
-        },
-        {
-            "Transform" : { "pos_x" : "BLOCK_SIZE * 5", "pos_y" : "BLOCK_SIZE * 3", "scaleSize_x" : "BLOCK_SIZE", "scaleSize_y" : "BLOCK_SIZE", "rotation" : 0.0},
-            "Sprite2D"  : { 
-                "shaderName" : "shaderSprite2D",
-                "shaderJSON" : "res/resources.json",
-                "textureName" : "grassland_cell",
-                "textureJSON" : "res/resources.json",
-                "subTextures" : [
-                    "grassland_cell1",
-                    "grassland_cell2",
-                    "grassland_cell3",
-                    "grassland_cell4",
-                    "grassland_cell5",
-                    "grassland_cell6",
-                    "grassland_cell7",
-                    "grassland_cell8"
-                ],
-                "layer" : 0.0,
-                "usage" : "static"
-            },
-            "Animator"  : {
-                "framesDuration" : [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
-            },
-            "Sound" : { "path" : "res/sounds/move.wav", "count" : 8, "location" : true}
-        },
-        {
-            "Transform" : { "pos_x" : "BLOCK_SIZE", "pos_y" : 0, "scaleSize_x" : "BLOCK_SIZE", "scaleSize_y" : "BLOCK_SIZE", "rotation" : 0.0},
-            "Sprite2D"  : { 
-                "shaderName" : "shaderSprite2D",
-                "shaderJSON" : "res/resources.json",
-                "textureName" : "grassland_cell",
-                "textureJSON" : "res/resources.json",
-                "subTextures" : [
-                    "grassland_cell1",
-                    "grassland_cell2",
-                    "grassland_cell3",
-                    "grassland_cell4",
-                    "grassland_cell5",
-                    "grassland_cell6",
-                    "grassland_cell7",
-                    "grassland_cell8"
-                ],
-                "layer" : 0.0,
-                "usage" : "static"
-            },
-            "Animator"  : {
-                "framesDuration" : [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
+                "size_x" : "BLOCK_SIZE / 4",
+                "size_y" : "BLOCK_SIZE / 4",
+                "layer" : 1.0
             }
         },
         {
-            "Transform" : { "pos_x" : 0, "pos_y" : "BLOCK_SIZE", "scaleSize_x" : "BLOCK_SIZE", "scaleSize_y" : "BLOCK_SIZE", "rotation" : 0.0},
+            "Name" : { "value" : "center" },
+            "Transform" : { "pos_x" : 0, "pos_y" : 0 , "scaleSize_x" : 1, "scaleSize_y" : 1, "rotation" : 0.0}
+        },
+        {
+            "Transform" : { "pos_x" : "BLOCK_SIZE /2", "pos_y" : "BLOCK_SIZE /2", "scaleSize_x" : 1, "scaleSize_y" : 1, "rotation" : 0.0},
             "Sprite2D"  : { 
                 "shaderName" : "shaderSprite2D",
                 "shaderJSON" : "res/resources.json",
                 "textureName" : "grassland_cell",
                 "textureJSON" : "res/resources.json",
-                "subTextures" : [
-                    "grassland_cell1",
-                    "grassland_cell2",
-                    "grassland_cell3",
-                    "grassland_cell4",
-                    "grassland_cell5",
-                    "grassland_cell6",
-                    "grassland_cell7",
-                    "grassland_cell8"
-                ],
-                "layer" : 0.0,
-                "usage" : "static"
-            },
-            "Animator"  : {
-                "framesDuration" : [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
+                "size_x" : "BLOCK_SIZE",
+                "size_y" : "BLOCK_SIZE",
+                "layer" : 0.0
             }
         },
         {
-            "Transform" : { "pos_x" : "BLOCK_SIZE", "pos_y" : "BLOCK_SIZE", "scaleSize_x" : "BLOCK_SIZE", "scaleSize_y" : "BLOCK_SIZE", "rotation" : 0.0},
+            "Transform" : { "pos_x" : "BLOCK_SIZE /2", "pos_y" : "BLOCK_SIZE * 3 / 2", "scaleSize_x" : 1, "scaleSize_y" : 1, "rotation" : 0.0},
             "Sprite2D"  : { 
                 "shaderName" : "shaderSprite2D",
                 "shaderJSON" : "res/resources.json",
                 "textureName" : "grassland_cell",
                 "textureJSON" : "res/resources.json",
-                "subTextures" : [
-                    "grassland_cell1",
-                    "grassland_cell2",
-                    "grassland_cell3",
-                    "grassland_cell4",
-                    "grassland_cell5",
-                    "grassland_cell6",
-                    "grassland_cell7",
-                    "grassland_cell8"
-                ],
-                "layer" : 0.0,
-                "usage" : "static"
+                "size_x" : "BLOCK_SIZE",
+                "size_y" : "BLOCK_SIZE",
+                "layer" : 0.0
             },
             "Animator"  : {
-                "framesDuration" : [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
+                "durations" : [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
+            }
+        },
+        {
+            "Transform" : { "pos_x" : "BLOCK_SIZE * 3 / 2", "pos_y" : "BLOCK_SIZE /2", "scaleSize_x" : 1, "scaleSize_y" : 1, "rotation" : 0.0},
+            "Sprite2D"  : { 
+                "shaderName" : "shaderSprite2D",
+                "shaderJSON" : "res/resources.json",
+                "textureName" : "grassland_cell",
+                "textureJSON" : "res/resources.json",
+                "size_x" : "BLOCK_SIZE",
+                "size_y" : "BLOCK_SIZE",
+                "layer" : 0.0
+            },
+            "Animator"  : {
+                "durations" : [ 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ]
             }
         }
     ]
