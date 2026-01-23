@@ -1,3 +1,0 @@
-[submodule "external/engine/simdjson"]
-	path = external/engine/simdjson
-	url = https://github.com/simdjson/simdjson
