@@ -1,10 +1,10 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "ECSWorld.h"
-#include "systems/SystemManager.h"
-#include "systems/input/InputSystem.h"
-#include "resources/ResourceManager.h"
+#include "comp/ECSWorld.h"
+#include "sys/SystemManager.h"
+#include "sys/input/InputSystem.h"
+#include "res/ResourceManager.h"
 
 struct Window;
 struct States;
@@ -39,12 +39,12 @@ namespace engine
         Core();
         
         bool init(const Config& config);
-        void loadJsonComponent(std::string pathJsonResource);
-        void predUpate();
+        void load_component(std::string pathJsonResource);
+        void pred_upate();
         void update(float delta);
         void shutdown();
 
-        bool isCloseWindow();
+        bool is_close_window();
     };
 }
 

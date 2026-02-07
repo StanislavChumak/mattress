@@ -1,0 +1,34 @@
+#ifndef RENDER_CONTEXT_H
+#define RENDER_CONTEXT_H
+
+#include "BufferObject.h"
+#include "SpriteBatch.h"
+
+#include <unordered_map>
+
+class ShaderProgram;
+class Texture2D;
+
+class RenderContext
+{
+    BufferObject _quadVBO;
+    BufferObject _quadEBO;
+
+    std::unordered_map<u_int64_t, SpriteBatch> _batches;
+    std::vector<u_int64_t> _keys;
+public:
+
+    RenderContext();
+    RenderContext(const RenderContext&) = delete;
+    RenderContext &operator=(const RenderContext&) = delete;
+    RenderContext(RenderContext &&other) noexcept;
+    RenderContext &operator=(RenderContext &&other) noexcept;
+    ~RenderContext() noexcept = default;
+
+    void create_sprite_batch(std::shared_ptr<ShaderProgram> shader, std::shared_ptr<Texture2D> texture);
+    void begin_batches();
+    void submit_batch(u_int64_t id, InstanceData date);
+    void end_batches();
+};
+
+#endif

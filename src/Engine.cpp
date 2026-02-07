@@ -2,16 +2,16 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "components/core/Window.h"
-#include "components/core/States.h"
-#include "components/rendering/Camera.h"
-#include "components/audio/Audio.h"
-#include "components/ui/Cursor.h"
+#include "comp/single/Window.h"
+#include "comp/single/States.h"
+#include "comp/single/Camera.h"
+#include "comp/single/Audio.h"
+#include "comp/single/Cursor.h"
 
-#include "components/registerComponent.h"
+#include "comp/registerComponent.h"
 
-#include "resources/RenderContext.h"
-#include "systems/rendering/SpriteRenderSystem.h"
+#include "res/RenderContext.h"
+#include "sys/rendering/SpriteRenderSystem.h"
 
 #ifndef FLAG_RELEASE
 #include <iostream>
@@ -24,14 +24,14 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void cursorCallback(GLFWwindow *window, double xpos, double ypos);
 
-Core::Core():inputSystem(world.addSingleComponent(Input{})){}
+Core::Core():inputSystem(world.add_single_comp(Input{})){}
 
 bool Core::init(const Config& config)
 {
-    window = &world.addSingleComponent(Window(config.pixelSize * config.pixelScale, config.nameWindow.c_str(), config.pixelScale));
-    states = &world.addSingleComponent(States{config.initState});
+    window = &world.add_single_comp(Window(config.pixelSize * config.pixelScale, config.nameWindow.c_str(), config.pixelScale));
+    states = &world.add_single_comp(States{config.initState});
 
-    world.addSingleComponent(Cursor{});
+    world.add_single_comp(Cursor{});
 
     if (!glfwInit())
     {
@@ -74,15 +74,17 @@ bool Core::init(const Config& config)
 #endif
     }
 
+    glfwSwapInterval(0);
+
 #ifndef FLAG_RELEASE
     std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
     std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 #endif
 
-    Camera &camera = world.addSingleComponent(Camera(config.pixelSize));
+    Camera &camera = world.add_single_comp(Camera(config.pixelSize));
 
-    Audio *audio = world.getSingleComponent<Audio>();
+    Audio *audio = world.get_single_comp<Audio>();
     if(audio)
     {
         audio->soundScale = config.SaundLocationScale;
@@ -109,30 +111,30 @@ bool Core::init(const Config& config)
     windowSizeCallback(window->poiter, window->size.x, window->size.y);
 
     std::shared_ptr<RenderContext> context = std::make_shared<RenderContext>();
-    resources.getCache<RenderContext>()["context"] = context;
+    resources.get_cache<RenderContext>()["context"] = context;
     SpriteRenderSystem::context = std::move(context);
     
     return true;
 }
 
-void Core::loadJsonComponent(std::string pathJsonComponent)
+void Core::load_component(std::string pathJsonComponent)
 {
     std::shared_ptr<simdjson::padded_string> json = resources.getJSON(pathJsonComponent);
     simdjson::ondemand::parser parser;
     simdjson::ondemand::document doc = parser.iterate(*json);
-    for(simdjson::ondemand::object entity : getVarJSON<simdjson::ondemand::array>(doc["entities"]))
+    for(simdjson::ondemand::object entity : get_var_json<simdjson::ondemand::array>(doc["entities"]))
     {
-        EntityID id = world.createEntity();
+        EntityID id = world.create_entity();
         for(auto field : entity)
         {
-            std::string_view name = getResultJSON<std::string_view>(field.unescaped_key());
-            simdjson::ondemand::object obj = getVarJSON<simdjson::ondemand::object>(field.value());
+            std::string_view name = get_result_json<std::string_view>(field.unescaped_key());
+            simdjson::ondemand::object obj = get_var_json<simdjson::ondemand::object>(field.value());
             typeRegistry[std::string(name)].addComponentFromJson(id, obj, world, resources);
         }
     }
 }
 
-void Core::predUpate()
+void Core::pred_upate()
 {
     windowSizeCallback(window->poiter, window->size.x, window->size.y);
 }
@@ -145,7 +147,7 @@ void Core::update(float delta)
     systems.update(world, delta, states->currentSystemState);
 
     inputSystem.updateLastInput();
-    world.removeMarked();
+    world.remove_marked();
 
     glfwSwapBuffers(window->poiter);
     resources.garbageCollector();
@@ -154,13 +156,13 @@ void Core::update(float delta)
 void Core::shutdown()
 {
     SpriteRenderSystem::context.reset();
-    world.clearSets();
-    world.clearSingletons();
+    world.clear_sets();
+    world.clear_singletons();
     resources.garbageCollector();
     glfwTerminate();
 }
 
-bool Core::isCloseWindow()
+bool Core::is_close_window()
 {
     return glfwWindowShouldClose(window->poiter);
 }
@@ -172,8 +174,8 @@ void windowSizeCallback(GLFWwindow *window, int width, int height)
     if (core)
     {
         glm::uvec2 windowSize = glm::uvec2(width, height);
-        core->world.getSingleComponent<Window>()->size = windowSize;
-        Camera *camera = core->world.getSingleComponent<Camera>();
+        core->world.get_single_comp<Window>()->size = windowSize;
+        Camera *camera = core->world.get_single_comp<Camera>();
 
         const float aspectRatio = static_cast<float>(camera->pixelSize.x) / camera->pixelSize.y;
         unsigned int viewPortWidth = windowSize.x;
@@ -191,8 +193,8 @@ void windowSizeCallback(GLFWwindow *window, int width, int height)
             viewPortOffsetBottom = (windowSize.y - viewPortHeight) / 2;
         }
 
-        camera->setOffsetViewport(viewPortWidth, viewPortHeight, viewPortOffsetLeft, viewPortOffsetBottom);
-        camera->updateProjectionMatrix();
+        camera->set_offset_viewport(viewPortWidth, viewPortHeight, viewPortOffsetLeft, viewPortOffsetBottom);
+        camera->update_proj_matrix();
     }
 }
 
@@ -215,8 +217,8 @@ void cursorCallback(GLFWwindow *window, double xpos, double ypos)
     Core *core = static_cast<Core*>(glfwGetWindowUserPointer(window));
     if (core)
     {
-        Camera *camera = core->world.getSingleComponent<Camera>();
-        Window *window = core->world.getSingleComponent<Window>();
+        Camera *camera = core->world.get_single_comp<Camera>();
+        Window *window = core->world.get_single_comp<Window>();
         glm::dvec2 offset(camera->offsetViewport);
         glm::dvec2 pos(xpos, ypos);
         pos -= offset;

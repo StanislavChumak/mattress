@@ -1,4 +1,4 @@
-#include "../external/jsonUtils.h"
+#include "jsonUtils.h"
 
 #include <charconv>
 
@@ -25,13 +25,13 @@ std::string exprDeploy(std::string_view expr, std::unordered_map<std::string, st
     int value_1, value_2;
 
     auto result = std::from_chars(operand_1.data(), operand_1.data() + operand_1.length(), value_1);
-#   ifndef FLAG_RELEASE
+#ifndef FLAG_RELEASE
     if(result.ec != std::errc()) std::cerr << "Failed convert \"" << operand_1 << "\" to int\n";  
-#   endif
+#endif
     result = std::from_chars(operand_2.data(), operand_2.data() + operand_2.length(), value_2);
-#   ifndef FLAG_RELEASE
+#ifndef FLAG_RELEASE
     if(result.ec != std::errc()) std::cerr << "Failed convert \"" << operand_2 << "\" to int\n";  
-#   endif
+#endif
 
     switch (expr[posOperator])
     {
@@ -44,7 +44,7 @@ std::string exprDeploy(std::string_view expr, std::unordered_map<std::string, st
     return std::to_string(value_1);
 }
 
-simdjson::padded_string preprocessJSON(const std::string& path,
+simdjson::padded_string preprocess_json(const std::string& path,
                            std::unordered_map<std::string, std::string>& defines)
 {
     std::ifstream file(path);
@@ -73,7 +73,7 @@ simdjson::padded_string preprocessJSON(const std::string& path,
             size_t end = line.find_last_of('"');
             includePath = line.substr(start, end - start);
 
-            result << preprocessJSON(includePath, defines) << "\n";
+            result << preprocess_json(includePath, defines) << "\n";
             continue;
         }
 

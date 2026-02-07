@@ -18,30 +18,28 @@ add_library(${PROJECT_NAME} STATIC
 src/Engine.cpp
 src/jsonUtils.cpp
 
-src/systems/SystemManager.cpp
+src/sys/SystemManager.cpp
 
-src/systems/input/InputSystem.cpp
-src/systems/transform/CursorFollowersSystem.cpp
-src/systems/transform/GlobalTransformSystem.cpp
-src/systems/rendering/CameraSystem.cpp
-src/systems/rendering/SpriteRenderSystem.cpp
-src/systems/rendering/AnimatorSystem.cpp
-src/systems/rendering/StateAnimatorSystem.cpp
-src/systems/audio/AudioSystem.cpp
-src/systems/audio/LocationAudioSystem.cpp
-src/systems/cleanup/RemoveOrphans.cpp
+src/sys/input/InputSystem.cpp
+src/sys/transform/CursorFollowersSystem.cpp
+src/sys/transform/GlobalTransformSystem.cpp
+src/sys/rendering/CameraSystem.cpp
+src/sys/rendering/SpriteRenderSystem.cpp
+src/sys/rendering/AnimatorSystem.cpp
+src/sys/rendering/StateAnimatorSystem.cpp
+src/sys/audio/AudioSystem.cpp
+src/sys/audio/LocationAudioSystem.cpp
+src/sys/cleanup/RemoveOrphans.cpp
 
-src/resources/ResourceManager.cpp
+src/res/ResourceManager.cpp
 
-src/resources/RenderContext.cpp
-src/resources/SpriteBatch.cpp
-src/resources/ShaderProgram.cpp
-src/resources/Texture2D.cpp
-src/resources/TextureAtlas.cpp
-src/resources/BufferObject.cpp
-src/resources/VertexArrayObject.cpp
-
-
+src/res/RenderContext.cpp
+src/res/SpriteBatch.cpp
+src/res/ShaderProgram.cpp
+src/res/Texture2D.cpp
+src/res/TextureAtlas.cpp
+src/res/BufferObject.cpp
+src/res/VertexArrayObject.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
