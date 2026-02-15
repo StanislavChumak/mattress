@@ -7,11 +7,12 @@ typedef unsigned long EntityID;
 class ResourceManager;
 
 struct Animator {
-    unsigned short currentFrame = 0;
-    double currentAnimationTime = 0;
-    unsigned short count = 0;
-    unsigned short offset = 0;
-    std::vector<double> durations;
+    size_t countFrame = 0;
+    std::vector<float> durations;
+
+    size_t currentFrame = 0;
+    float currentAnimationTime = 0;
+    size_t offset = 0;
 
     Animator() = default;
 
@@ -22,7 +23,7 @@ struct Animator {
         {
             durations.push_back(get_var_json<double>(frameDuration.value()));
         }
-        count = durations.size();
+        countFrame = durations.size();
     }
 };
 

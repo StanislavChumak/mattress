@@ -4,7 +4,7 @@
 #include <iostream>
 #endif
 
-std::shared_ptr<simdjson::padded_string> ResourceManager::getJSON(const std::string& path)
+std::shared_ptr<simdjson::padded_string> ResourceManager::get_json(const std::string& path)
 {
     std::shared_ptr<simdjson::padded_string> json;
     if(auto it = _jsonCache.find(path); it != _jsonCache.end())
@@ -15,7 +15,7 @@ std::shared_ptr<simdjson::padded_string> ResourceManager::getJSON(const std::str
     
 }
 
-void ResourceManager::garbageCollector()
+void ResourceManager::garbage_collector()
 {
     for(auto &collector : _garbageCollectors)
         collector();

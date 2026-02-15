@@ -1,4 +1,4 @@
-#include "res/Texture2D.h"
+#include "res/Texture.h"
 
 #include "glad/glad.h"
 

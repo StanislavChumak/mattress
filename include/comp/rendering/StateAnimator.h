@@ -6,7 +6,7 @@
 
 struct StateAnimator
 {
-    std::unordered_map<std::string, std::pair<unsigned short, unsigned short>> states;
+    std::unordered_map<std::string, std::pair<size_t, size_t>> states;
     std::string currentState = "";
     bool dirty = true;
 
@@ -17,8 +17,8 @@ struct StateAnimator
             std::string_view name = get_result_json<std::string_view>(field.unescaped_key());
             simdjson::ondemand::object state = get_var_json<simdjson::ondemand::object>(field.value());
 
-            unsigned short offset = get_var_json<int64_t>(state["offset"]);
-            unsigned short count = get_var_json<int64_t>(state["count"]);
+            size_t offset = get_var_json<int64_t>(state["offset"]);
+            size_t count = get_var_json<int64_t>(state["count"]);
 
             states.emplace(std::string(name), std::make_pair(offset, count));
 

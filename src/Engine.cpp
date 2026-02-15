@@ -119,7 +119,7 @@ bool Core::init(const Config& config)
 
 void Core::load_component(std::string pathJsonComponent)
 {
-    std::shared_ptr<simdjson::padded_string> json = resources.getJSON(pathJsonComponent);
+    std::shared_ptr<simdjson::padded_string> json = resources.get_json(pathJsonComponent);
     simdjson::ondemand::parser parser;
     simdjson::ondemand::document doc = parser.iterate(*json);
     for(simdjson::ondemand::object entity : get_var_json<simdjson::ondemand::array>(doc["entities"]))
@@ -150,7 +150,7 @@ void Core::update(float delta)
     world.remove_marked();
 
     glfwSwapBuffers(window->poiter);
-    resources.garbageCollector();
+    resources.garbage_collector();
 }
 
 void Core::shutdown()
@@ -158,7 +158,7 @@ void Core::shutdown()
     SpriteRenderSystem::context.reset();
     world.clear_sets();
     world.clear_singletons();
-    resources.garbageCollector();
+    resources.garbage_collector();
     glfwTerminate();
 }
 

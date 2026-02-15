@@ -29,7 +29,7 @@ core.systems.register_always_update<GlobalTransformSystem>()
 #endif
 
 #define REGISTER_SPRITE(core) \
-REGISTER_COMPONENT(Sprite2D); \
+REGISTER_COMPONENT(Sprite); \
 core.systems.register_updete<CameraSystem>(SystemPriority::UI_LOGIC); \
 core.systems.register_always_update<CameraSystem>(); \
 core.systems.register_updete<SpriteRenderSystem>(SystemPriority::RENDERING); \

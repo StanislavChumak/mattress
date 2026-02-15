@@ -3,7 +3,7 @@
 #include "glad/glad.h"
 
 #include "res/ShaderProgram.h"
-#include "res/Texture2D.h"
+#include "res/Texture.h"
 
 RenderContext::RenderContext()
 {

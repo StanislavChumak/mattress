@@ -8,13 +8,13 @@
 #include "res/ResourceManager.h"
 #include "res/RenderContext.h"
 #include "res/ShaderProgram.h"
-#include "res/Texture2D.h"
+#include "res/Texture.h"
 #include "res/TextureAtlas.h"
 
 typedef unsigned long EntityID;
 class ECSWorld;
 
-struct Sprite2D
+struct Sprite
 {
     std::shared_ptr<ShaderProgram> shader;
     std::shared_ptr<Texture2D> texture;
@@ -31,18 +31,18 @@ struct Sprite2D
     {
         std::string_view name = get_var_json<std::string_view>(obj["shaderName"]);
         std::string_view json = get_var_json<std::string_view>(obj["shaderJSON"]);
-        shader = resource.getResource<ShaderProgram>(std::string(name), std::string(json), "shaders");
+        shader = resource.get_resource<ShaderProgram>(std::string(name), std::string(json), "shaders");
 
         name = get_var_json<std::string_view>(obj["textureName"]);
         json = get_var_json<std::string_view>(obj["textureJSON"]);
-        texture = resource.getResource<Texture2D>(std::string(name), std::string(json), "textures");
+        texture = resource.get_resource<Texture2D>(std::string(name), std::string(json), "textures");
 
         std::shared_ptr<RenderContext> context = resource.get_cache<RenderContext>()["context"].lock();
         context->create_sprite_batch(shader, texture);
 
         if(set_var_json(name, obj["atlasName"]) && set_var_json(json, obj["atlasJSON"]))
         {
-            atlas = resource.getResource<TextureAtlas>(std::string(name), std::string(json), "atlases");
+            atlas = resource.get_resource<TextureAtlas>(std::string(name), std::string(json), "atlases");
             subTexture = atlas->get_sub_texture(0);
         }
         else

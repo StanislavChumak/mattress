@@ -4,7 +4,7 @@
 #include <vector>
 #include <limits>
 
-typedef unsigned long EntityID;
+typedef uint64_t EntityID;
 constexpr EntityID NULL_ENTITY = std::numeric_limits<EntityID>::max();
 
 

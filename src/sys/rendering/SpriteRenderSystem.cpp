@@ -7,7 +7,7 @@
 
 std::shared_ptr<RenderContext> SpriteRenderSystem::context;
 
-InstanceData sprite_to_instance(Transform *transform, Sprite2D *sprite)
+InstanceData sprite_to_instance(Transform *transform, Sprite *sprite)
 {
     InstanceData date;
     glm::mat4 glob = transform->globalMatrix;
@@ -33,7 +33,7 @@ void SpriteRenderSystem::update(ECSWorld &world, const double &delta)
 {
     context->begin_batches();
 
-    for(auto [entity, transform, sprite] : world.view<Transform, Sprite2D>())
+    for(auto [entity, transform, sprite] : world.view<Transform, Sprite>())
     {
         if(!sprite->visibility) continue;
 

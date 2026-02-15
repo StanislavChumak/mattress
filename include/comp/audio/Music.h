@@ -12,11 +12,11 @@ struct Music
     ma_sound *music;
 
     float scaleVolume = 1.f;
+    bool isLocation = false;
 
     bool isPlay = false;
     bool isStop = false;
 
-    bool isLocation = false;
 
     Music() = default;
     Music(const Music&) = delete;

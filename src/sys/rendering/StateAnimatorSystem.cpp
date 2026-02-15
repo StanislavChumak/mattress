@@ -14,7 +14,7 @@ void StateAnimatorSystem::update(ECSWorld &world, const double &delta)
         if(it != state->states.end())
         {
             animator->currentFrame = animator->offset = it->second.first;
-            animator->count = it->second.second;
+            animator->countFrame = it->second.second;
             animator->currentAnimationTime = 0;
         }
         state->dirty = false;

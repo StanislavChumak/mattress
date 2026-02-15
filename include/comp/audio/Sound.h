@@ -15,11 +15,11 @@ struct Sound
     size_t count;
 
     float scaleVolume = 1.f;
+    bool isLocation = false;
 
     bool isPlay = false;
     bool isStop = false;
 
-    bool isLocation = false;
 
     Sound() = default;
     Sound(const Sound&) = delete;

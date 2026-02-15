@@ -8,7 +8,7 @@
 
 void AnimatorSystem::update(ECSWorld &world, const double &delta)
 {
-    for(auto [entity, sprite, animator] : world.view<Sprite2D, Animator>())
+    for(auto [entity, sprite, animator] : world.view<Sprite, Animator>())
     {
         animator->currentAnimationTime += delta;
 
@@ -17,7 +17,7 @@ void AnimatorSystem::update(ECSWorld &world, const double &delta)
             animator->currentAnimationTime -= animator->durations[animator->currentFrame];
             animator->currentFrame++;
 
-            if (animator->currentFrame == animator->count + animator->offset)
+            if (animator->currentFrame == animator->countFrame + animator->offset)
             {
                 animator->currentFrame = animator->offset;
             }
