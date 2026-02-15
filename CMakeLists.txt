@@ -46,6 +46,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/external/mtrsstruct
 )
 
 add_subdirectory (external/glad glad)
@@ -56,6 +57,3 @@ target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 
 add_subdirectory(external/glm glm)
 target_link_libraries(${PROJECT_NAME} PUBLIC glm)
-
-add_subdirectory(external/simdjson)
-target_link_libraries(${PROJECT_NAME} PUBLIC simdjson)
