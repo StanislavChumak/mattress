@@ -3,6 +3,9 @@
 
 #include "glad/glad.h"
 
+namespace mtrs::res
+{
+
 class BufferObject;
 
 class VertexArrayObject
@@ -27,5 +30,7 @@ public:
     void unbind() const;
 };
 
+
+}
 
 #endif

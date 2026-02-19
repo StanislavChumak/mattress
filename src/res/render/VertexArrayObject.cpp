@@ -1,6 +1,9 @@
-#include "res/VertexArrayObject.h"
+#include "res/render/VertexArrayObject.h"
 
-#include "res/BufferObject.h"
+#include "res/render/BufferObject.h"
+
+namespace mtrs::res
+{
 
 VertexArrayObject::VertexArrayObject()
 {
@@ -59,4 +62,6 @@ void VertexArrayObject::bind() const
 void VertexArrayObject::unbind() const
 {
     glBindVertexArray(0);
+}
+
 }

@@ -1,24 +1,37 @@
-#include "res/Texture.h"
+#include "res/asset/Texture.h"
 
 #include "glad/glad.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
-#include "../external/stb_image.h"
+#include "stb_image.h"
+
+#include "util/get_from_file_mtrs.h"
+
+#include "mtrsstruct/dynamic_field.def"
+#include "mtrsstruct/res_struct/Texture.struct"
+
+#include <fstream>
 
 #ifndef FLAG_RELEASE
 #include <iostream>
 #endif
 
-void Texture::from_json(simdjson::ondemand::object obj, ResourceManager &resource)
-{
-    stbi_set_flip_vertically_on_load(true);
 
-    auto resultInt = obj["number"].get_int64();
-    if(!resultInt.error())
-        _number = resultInt.value();
-    
-    std::string path = std::string(get_var_json<std::string_view>(obj["filePath"]));
+namespace mtrs::res
+{
+
+Texture::Texture(std::ifstream &file)
+{
+    Texture_rs texture;
+    file.read(reinterpret_cast<char*>(&texture), sizeof(texture));
+    std::string path = get_string_from_mtformat(file, texture.pathOffset, texture.pathSize);
+
+    // auto resultInt = obj["number"].get_int64();
+    // if(!resultInt.error())
+    //     _number = resultInt.value();
+
+    stbi_set_flip_vertically_on_load(true);
 
     int channels = 0;
     unsigned char *pixels = stbi_load(path.c_str(), &_width, &_height, &channels, 0);
@@ -81,6 +94,16 @@ Texture::~Texture()
     glDeleteTextures(1, &_ID);
 }
 
+std::string Texture::get_type_name()
+{
+    return "textures";
+}
+
+uint32_t Texture::get_type_size()
+{
+    return sizeof(Texture_rs);
+}
+
 void Texture::bind() const
 {
     glBindTexture(GL_TEXTURE_2D, _ID);
@@ -94,4 +117,6 @@ void Texture::active() const
 unsigned int Texture::id() const noexcept
 {
     return _ID;
+}
+
 }

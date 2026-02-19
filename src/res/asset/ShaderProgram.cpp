@@ -1,8 +1,13 @@
-#include "res/ShaderProgram.h"
+#include "res/asset/ShaderProgram.h"
 
 #include "glad/glad.h"
 #include "glm/mat4x4.hpp"
 #include "glm/gtc/type_ptr.hpp"
+
+#include "util/get_from_file_mtrs.h"
+
+#include "mtrsstruct/dynamic_field.def"
+#include "mtrsstruct/res_struct/Shader.struct"
 
 #include <fstream>
 
@@ -10,33 +15,16 @@
 #include <iostream>
 #endif
 
-std::string getFileString(const std::string &relativeFilePath)
+namespace mtrs::res
 {
-    std::ifstream fileFlow;
-    fileFlow.open(relativeFilePath, std::ios::ate | std::ios::binary);
 
-#   ifndef FLAG_RELEASE
-    if (!fileFlow.is_open())
-    {
-        std::cerr << "Failed to open file: " << relativeFilePath << std::endl;
-        return "";
-    }
-#   endif
-
-    std::streamsize size = fileFlow.tellg();
-    fileFlow.seekg(0);
-
-    char* buffer = new char[size + 1];
-    fileFlow.read(buffer, size);
-    buffer[size] = '\0';
-
-    return std::string(buffer);
-}
-
-void ShaderProgram::from_json(simdjson::ondemand::object obj, ResourceManager &resource)
+ShaderProgram::ShaderProgram(std::ifstream &file)
 {
-    std::string vertexShaderCode = getFileString(std::string(obj["pathVertexFile"].get_string().value()));
-    std::string fragmentShaderCode = getFileString(std::string(obj["pathFragmentFile"].get_string().value()));
+    Shader_rs shader;
+    file.read(reinterpret_cast<char*>(&shader), sizeof(shader));
+
+    std::string vertexShaderCode  = get_string_from_mtformat(file, shader.vertexOffset, shader.vertexSize);
+    std::string fragmentShaderCode = get_string_from_mtformat(file, shader.fragmentOffset, shader.fragmentSize);
 
 #   ifndef FLAG_RELEASE
     if (vertexShaderCode.empty())
@@ -54,7 +42,7 @@ void ShaderProgram::from_json(simdjson::ondemand::object obj, ResourceManager &r
 
     GLuint vertexShaderID = 0;
     GLuint fragmentShaderID = 0;
-    if (!createShader(std::move(vertexShaderCode).c_str(), GL_VERTEX_SHADER, vertexShaderID))
+    if(!createShader(std::move(vertexShaderCode).c_str(), GL_VERTEX_SHADER, vertexShaderID))
     {
 #ifndef FLAG_RELEASE
         std::cerr << "ERROR::VERTEX::SHADER::COMPILATION_FAILED" << std::endl;
@@ -62,7 +50,7 @@ void ShaderProgram::from_json(simdjson::ondemand::object obj, ResourceManager &r
 #endif
     }
 
-    if (!createShader(std::move(fragmentShaderCode).c_str(), GL_FRAGMENT_SHADER, fragmentShaderID))
+    if(!createShader(std::move(fragmentShaderCode).c_str(), GL_FRAGMENT_SHADER, fragmentShaderID))
     {
 #ifndef FLAG_RELEASE
         std::cerr << "ERROR::FRAGMENT::SHADER::COMPILATION_FAILED" << std::endl;
@@ -136,6 +124,16 @@ ShaderProgram &ShaderProgram::operator=(ShaderProgram &&other) noexcept
     return *this;
 }
 
+std::string get_type_name()
+{
+    return "shaders";
+}
+
+uint32_t get_type_size()
+{
+    return sizeof(Shader_rs);
+}
+
 ShaderProgram::~ShaderProgram()
 {
     glDeleteProgram(_ID);
@@ -168,4 +166,6 @@ bool ShaderProgram::has_uniform(const char *name) const {
 unsigned int ShaderProgram::id() const noexcept
 {
     return _ID;
+}
+
 }

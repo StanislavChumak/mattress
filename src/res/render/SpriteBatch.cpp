@@ -1,9 +1,14 @@
-#include "res/SpriteBatch.h"
+#include "res/render/SpriteBatch.h"
 
 #include "glad/glad.h"
 
-#include "res/ShaderProgram.h"
-#include "res/Texture.h"
+#include "res/asset/ShaderProgram.h"
+#include "res/asset/Texture.h"
+
+#include <cstring>
+
+namespace mtrs::res
+{
 
 SpriteBatch::SpriteBatch(SpriteBatch &&other) noexcept
 {
@@ -91,5 +96,7 @@ void SpriteBatch::end_batch()
 
 void SpriteBatch::flush()
 {
+
+}
 
 }

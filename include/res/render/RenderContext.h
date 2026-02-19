@@ -6,6 +6,9 @@
 
 #include <unordered_map>
 
+namespace mtrs::res
+{
+
 class ShaderProgram;
 class Texture;
 
@@ -30,5 +33,7 @@ public:
     void submit_batch(uint64_t id, InstanceData date);
     void end_batches();
 };
+
+}
 
 #endif

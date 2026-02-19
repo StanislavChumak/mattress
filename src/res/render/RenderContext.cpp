@@ -1,9 +1,12 @@
-#include "res/RenderContext.h"
+#include "res/render/RenderContext.h"
 
 #include "glad/glad.h"
 
-#include "res/ShaderProgram.h"
-#include "res/Texture.h"
+#include "res/asset/ShaderProgram.h"
+#include "res/asset/Texture.h"
+
+namespace mtrs::res
+{
 
 RenderContext::RenderContext()
 {
@@ -105,4 +108,6 @@ void RenderContext::end_batches()
     {
         _batches.at(key).end_batch();
     }
+}
+
 }

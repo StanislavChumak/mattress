@@ -1,11 +1,14 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include "jsonUtils.h"
+#include "res/asset/Asset.h"
+
+namespace mtrs::res
+{
 
 class ResourceManager;
 
-class Texture
+class Texture : public Asset
 {
     unsigned int _ID;
     unsigned char _number;
@@ -14,18 +17,16 @@ class Texture
     int _height;
 
 public:
-    void from_json(simdjson::ondemand::object obj, ResourceManager &resource);
-    Texture() = default;
-    Texture(Texture &) = delete;
-    Texture &operator=(const Texture &) = delete;
-    Texture(Texture &&other) noexcept;
-    Texture &operator=(Texture &&other) noexcept;
-    ~Texture();
+    ASSETS_CONSTRUCTORS(Texture);
+
+    std::string get_type_name() override;
+    uint32_t get_type_size() override;
 
     void bind() const;
     void active() const;
     unsigned int id() const noexcept;
 };
 
+}
 
 #endif

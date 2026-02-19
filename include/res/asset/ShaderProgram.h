@@ -3,23 +3,23 @@
 
 #include <glm/fwd.hpp>
 
-#include "jsonUtils.h"
+#include "res/asset/Asset.h"
+
+namespace mtrs::res
+{
 
 class ResourceManager;
 
-class ShaderProgram
+class ShaderProgram : public Asset
 {
     bool createShader(const char *sourse, const unsigned int &shaderType, unsigned int &shaderID);
     bool _isCompiled = false;
     unsigned int _ID = 0;
 public:
-    void from_json(simdjson::ondemand::object obj, ResourceManager &resource);
-    ShaderProgram() = default;
-    ShaderProgram(const ShaderProgram &) = delete;
-    ShaderProgram &operator=(const ShaderProgram &) = delete;
-    ShaderProgram(ShaderProgram &&other) noexcept;
-    ShaderProgram &operator=(ShaderProgram &&other) noexcept;
-    ~ShaderProgram();
+    ASSETS_CONSTRUCTORS(ShaderProgram);
+
+    std::string get_type_name() override;
+    uint32_t get_type_size() override;
 
     bool is_compiled() const { return _isCompiled; };
     void use() const;
@@ -31,5 +31,6 @@ public:
     unsigned int id() const noexcept;    
 };
 
+}
 
 #endif

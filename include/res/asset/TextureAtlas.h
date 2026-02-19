@@ -1,15 +1,18 @@
 #ifndef TEXTURE_ATLAS_H
 #define TEXTURE_ATLAS_H
 
-#include "jsonUtils.h"
-
 #include "glm/vec2.hpp"
+
+#include "res/asset/Asset.h"
 
 #include <vector>
 
+namespace mtrs::res
+{
+
 class ResourceManager;
 
-class TextureAtlas
+class TextureAtlas : public Asset
 {
 public:
     struct SubTexture2D
@@ -22,15 +25,14 @@ private:
     std::vector<SubTexture2D> _atlas;
 
 public:
-    void from_json(simdjson::ondemand::object obj, ResourceManager &resource);
-    TextureAtlas() = default;
-    TextureAtlas(const TextureAtlas &) = delete;
-    TextureAtlas &operator=(const TextureAtlas &) = delete;
-    TextureAtlas(TextureAtlas &&other) noexcept;
-    TextureAtlas &operator=(TextureAtlas &&other) noexcept;
-    ~TextureAtlas() = default;
+    ASSETS_CONSTRUCTORS(TextureAtlas);
+
+    std::string get_type_name() override;
+    uint32_t get_type_size() override;
 
     const SubTexture2D &get_sub_texture(const size_t index) const;
 };
+
+}
 
 #endif

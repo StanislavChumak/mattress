@@ -1,31 +1,34 @@
-#include "res/TextureAtlas.h"
+#include "res/asset/TextureAtlas.h"
 
 #include "res/ResourceManager.h"
 
-void TextureAtlas::from_json(simdjson::ondemand::object obj, ResourceManager &resource)
+#include "mtrsstruct/dynamic_field.def"
+#include "mtrsstruct/res_struct/TextureAtlas.struct"
+
+namespace mtrs::res
 {
-    int64_t textureWidth = get_var_json<int64_t>(obj["textureWidth"]);
-    int64_t textureHeight = get_var_json<int64_t>(obj["textureHeight"]);
 
-    size_t count = get_var_json<int64_t>(obj["subCount"]);
-    int64_t subTextureWidth = get_var_json<int64_t>(obj["subWidth"]);
-    int64_t subTextureHeight = get_var_json<int64_t>(obj["subHeight"]);
+TextureAtlas::TextureAtlas(std::ifstream &file)
+{
+    TextureAtlas_rs atlas;
+    file.read(reinterpret_cast<char*>(&atlas), sizeof(atlas));
 
-    int64_t currentTextureOffsetX = 0;
-    int64_t currentTextureOffsetY = textureHeight;
+    uint32_t count = (atlas.height / atlas.subHeight) * (atlas.width / atlas.subWidth);
+    uint64_t currentTextureOffsetX = 0;
+    uint64_t currentTextureOffsetY = atlas.height;
     _atlas.clear();
     for(size_t i = 0; i < count; i++)
     {
-        glm::vec2 leftBottom(static_cast<float>(currentTextureOffsetX + 0.01f) / textureWidth, static_cast<float>(currentTextureOffsetY - subTextureHeight + 0.01f) / textureHeight);
-        glm::vec2 rigthTop(static_cast<float>(currentTextureOffsetX + subTextureWidth - 0.01f) / textureWidth, static_cast<float>(currentTextureOffsetY - 0.01f) / textureHeight);
+        glm::vec2 leftBottom(static_cast<float>(currentTextureOffsetX + 0.01f) / atlas.width, static_cast<float>(currentTextureOffsetY - atlas.subHeight + 0.01f) / atlas.height);
+        glm::vec2 rigthTop(static_cast<float>(currentTextureOffsetX + atlas.subWidth - 0.01f) / atlas.width, static_cast<float>(currentTextureOffsetY - 0.01f) / atlas.height);
 
         _atlas.push_back(SubTexture2D{leftBottom, rigthTop});
 
-        currentTextureOffsetX += subTextureWidth;
-        if (currentTextureOffsetX >= textureWidth)
+        currentTextureOffsetX += atlas.subWidth;
+        if (currentTextureOffsetX >= atlas.width)
         {
             currentTextureOffsetX = 0;
-            currentTextureOffsetY -= subTextureHeight;
+            currentTextureOffsetY -= atlas.subHeight;
         }
     }
 }
@@ -46,6 +49,21 @@ TextureAtlas &TextureAtlas::operator=(TextureAtlas &&other) noexcept
     return *this;
 }
 
+TextureAtlas::~TextureAtlas()
+{
+    _atlas.clear();
+}
+
+std::string TextureAtlas::get_type_name()
+{
+    return "atlases";
+}
+
+uint32_t TextureAtlas::get_type_size()
+{
+    return sizeof(TextureAtlas_rs);
+}
+
 const TextureAtlas::SubTexture2D &TextureAtlas::get_sub_texture(const size_t index) const
 {
     if (index >= _atlas.size())
@@ -54,4 +72,6 @@ const TextureAtlas::SubTexture2D &TextureAtlas::get_sub_texture(const size_t ind
         return _atlas[0];
     }
     return _atlas[index];
+}
+
 }

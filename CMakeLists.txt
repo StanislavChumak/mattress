@@ -15,6 +15,7 @@ add_library(${PROJECT_NAME} STATIC
 src/Engine.cpp
 
 src/util/get_files_from_folder.cpp
+src/util/get_from_file_mtrs.cpp
 
 # Systems
 src/sys/SystemManager.cpp
@@ -57,7 +58,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${PROJECT_SOURCE_DIR}/include
-        ${PROJECT_SOURCE_DIR}/external/mtrsstruct
+        ${PROJECT_SOURCE_DIR}/external
 )
 
 add_subdirectory (external/glad glad)

@@ -10,6 +10,9 @@
 #include <vector>
 #include <memory>
 
+namespace mtrs::res
+{
+
 class ShaderProgram;
 class Texture;
 
@@ -58,5 +61,7 @@ public:
     void end_batch();
     void flush();
 };
+
+}
 
 #endif

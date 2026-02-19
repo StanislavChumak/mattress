@@ -1,10 +1,13 @@
-#include "res/BufferObject.h"
+#include "res/render/BufferObject.h"
 
 #include "glad/glad.h"
 
 #ifndef FLAG_RELEASE
 #include <iostream>
 #endif
+
+namespace mtrs::res
+{
 
 BufferObject::BufferObject()
 {
@@ -81,4 +84,6 @@ void BufferObject::bind_base(const GLuint index)
 void BufferObject::unbind() const noexcept
 {
     glBindBuffer(_mode, 0);
+}
+
 }

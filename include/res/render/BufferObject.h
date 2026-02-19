@@ -3,6 +3,9 @@
 
 #include "glad/glad.h"
 
+namespace mtrs::res
+{
+
 class BufferObject
 {
     friend class RenderContext;
@@ -28,5 +31,6 @@ public:
     void unbind() const noexcept;
 };
 
+}
 
 #endif
