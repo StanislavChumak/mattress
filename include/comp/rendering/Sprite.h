@@ -17,7 +17,7 @@ class ECSWorld;
 struct Sprite
 {
     std::shared_ptr<ShaderProgram> shader;
-    std::shared_ptr<Texture2D> texture;
+    std::shared_ptr<Texture> texture;
     std::shared_ptr<TextureAtlas> atlas;
 
     TextureAtlas::SubTexture2D subTexture;
@@ -35,7 +35,7 @@ struct Sprite
 
         name = get_var_json<std::string_view>(obj["textureName"]);
         json = get_var_json<std::string_view>(obj["textureJSON"]);
-        texture = resource.get_resource<Texture2D>(std::string(name), std::string(json), "textures");
+        texture = resource.get_resource<Texture>(std::string(name), std::string(json), "textures");
 
         std::shared_ptr<RenderContext> context = resource.get_cache<RenderContext>()["context"].lock();
         context->create_sprite_batch(shader, texture);

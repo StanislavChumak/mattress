@@ -1,11 +1,11 @@
-#ifndef TEXTURE2D_H
-#define TEXTURE2D_H
+#ifndef TEXTURE_H
+#define TEXTURE_H
 
 #include "jsonUtils.h"
 
 class ResourceManager;
 
-class Texture2D
+class Texture
 {
     unsigned int _ID;
     unsigned char _number;
@@ -15,12 +15,12 @@ class Texture2D
 
 public:
     void from_json(simdjson::ondemand::object obj, ResourceManager &resource);
-    Texture2D() = default;
-    Texture2D(Texture2D &) = delete;
-    Texture2D &operator=(const Texture2D &) = delete;
-    Texture2D(Texture2D &&other) noexcept;
-    Texture2D &operator=(Texture2D &&other) noexcept;
-    ~Texture2D();
+    Texture() = default;
+    Texture(Texture &) = delete;
+    Texture &operator=(const Texture &) = delete;
+    Texture(Texture &&other) noexcept;
+    Texture &operator=(Texture &&other) noexcept;
+    ~Texture();
 
     void bind() const;
     void active() const;

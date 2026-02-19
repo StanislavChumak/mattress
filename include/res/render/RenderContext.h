@@ -7,7 +7,7 @@
 #include <unordered_map>
 
 class ShaderProgram;
-class Texture2D;
+class Texture;
 
 class RenderContext
 {
@@ -25,7 +25,7 @@ public:
     RenderContext &operator=(RenderContext &&other) noexcept;
     ~RenderContext() noexcept = default;
 
-    void create_sprite_batch(std::shared_ptr<ShaderProgram> shader, std::shared_ptr<Texture2D> texture);
+    void create_sprite_batch(std::shared_ptr<ShaderProgram> shader, std::shared_ptr<Texture> texture);
     void begin_batches();
     void submit_batch(uint64_t id, InstanceData date);
     void end_batches();

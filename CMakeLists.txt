@@ -13,30 +13,41 @@ endif()
 add_library(${PROJECT_NAME} STATIC
 
 src/Engine.cpp
-src/jsonUtils.cpp
 
+src/util/get_files_from_folder.cpp
+
+# Systems
 src/sys/SystemManager.cpp
 
 src/sys/input/InputSystem.cpp
+
 src/sys/transform/CursorFollowersSystem.cpp
 src/sys/transform/GlobalTransformSystem.cpp
+
 src/sys/rendering/CameraSystem.cpp
 src/sys/rendering/SpriteRenderSystem.cpp
 src/sys/rendering/AnimatorSystem.cpp
 src/sys/rendering/StateAnimatorSystem.cpp
+
 src/sys/audio/AudioSystem.cpp
 src/sys/audio/LocationAudioSystem.cpp
+
 src/sys/cleanup/RemoveOrphans.cpp
 
+# Resourses
 src/res/ResourceManager.cpp
 
-src/res/RenderContext.cpp
-src/res/SpriteBatch.cpp
-src/res/ShaderProgram.cpp
-src/res/Texture.cpp
-src/res/TextureAtlas.cpp
-src/res/BufferObject.cpp
-src/res/VertexArrayObject.cpp
+src/res/asset/ShaderProgram.cpp
+src/res/asset/Texture.cpp
+src/res/asset/TextureAtlas.cpp
+
+src/res/render/RenderContext.cpp
+src/res/render/SpriteBatch.cpp
+src/res/render/BufferObject.cpp
+src/res/render/VertexArrayObject.cpp
+
+# Components
+
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE

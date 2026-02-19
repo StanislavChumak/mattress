@@ -13,7 +13,7 @@
 #include "res/RenderContext.h"
 #include "sys/rendering/SpriteRenderSystem.h"
 
-#ifndef FLAG_RELEASE
+#ifdef FLAG_DEBUG
 #include <iostream>
 #endif
 
@@ -35,7 +35,7 @@ bool Core::init(const Config& config)
 
     if (!glfwInit())
     {
-#ifndef FLAG_RELEASE
+#ifdef FLAG_DEBUG
         std::cerr << "Failed GLFW" << std::endl;
         return false;
 #endif
@@ -45,7 +45,7 @@ bool Core::init(const Config& config)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     window->poiter = glfwCreateWindow(window->size.x, window->size.y, window->name, nullptr, nullptr);
-#ifndef FLAG_RELEASE
+#ifdef FLAG_DEBUG
     if (!window->poiter)
     {
         std::cerr << "Failed to create GLFW window" << std::endl;
@@ -67,7 +67,7 @@ bool Core::init(const Config& config)
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-#ifndef FLAG_RELEASE
+#ifdef FLAG_DEBUG
         std::cerr << "Couidn't load opengl" << std::endl;
         glfwTerminate();
         return false;
@@ -76,7 +76,7 @@ bool Core::init(const Config& config)
 
     glfwSwapInterval(0);
 
-#ifndef FLAG_RELEASE
+#ifdef FLAG_DEBUG
     std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
     std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
@@ -89,7 +89,7 @@ bool Core::init(const Config& config)
     {
         audio->soundScale = config.SaundLocationScale;
         audio->init();
-#ifndef FLAG_RELEASE
+#ifdef FLAG_DEBUG
         if(!audio->initialized)
         {
             std::cerr << "Failed to init sound engine" << std::endl;

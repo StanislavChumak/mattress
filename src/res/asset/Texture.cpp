@@ -10,7 +10,7 @@
 #include <iostream>
 #endif
 
-void Texture2D::from_json(simdjson::ondemand::object obj, ResourceManager &resource)
+void Texture::from_json(simdjson::ondemand::object obj, ResourceManager &resource)
 {
     stbi_set_flip_vertically_on_load(true);
 
@@ -51,7 +51,7 @@ void Texture2D::from_json(simdjson::ondemand::object obj, ResourceManager &resou
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-Texture2D::Texture2D(Texture2D &&other) noexcept
+Texture::Texture(Texture &&other) noexcept
 {
     _ID = other._ID;
     other._ID = 0;
@@ -61,7 +61,7 @@ Texture2D::Texture2D(Texture2D &&other) noexcept
     _number = other._number;
 }
 
-Texture2D &Texture2D::operator=(Texture2D &&other) noexcept
+Texture &Texture::operator=(Texture &&other) noexcept
 {
     if(this != &other)
     {
@@ -76,22 +76,22 @@ Texture2D &Texture2D::operator=(Texture2D &&other) noexcept
     return *this;
 }
 
-Texture2D::~Texture2D()
+Texture::~Texture()
 {
     glDeleteTextures(1, &_ID);
 }
 
-void Texture2D::bind() const
+void Texture::bind() const
 {
     glBindTexture(GL_TEXTURE_2D, _ID);
 }
 
-void Texture2D::active() const
+void Texture::active() const
 {
     glActiveTexture(GL_TEXTURE0 + _number);
 }
 
-unsigned int Texture2D::id() const noexcept
+unsigned int Texture::id() const noexcept
 {
     return _ID;
 }

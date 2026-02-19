@@ -11,7 +11,7 @@
 #include <memory>
 
 class ShaderProgram;
-class Texture2D;
+class Texture;
 
 class RenderContext;
 
@@ -43,7 +43,7 @@ private:
     uint8_t _currentBufferIndex = 0;
     
     std::shared_ptr<ShaderProgram> _shader;
-    std::shared_ptr<Texture2D> _texture;
+    std::shared_ptr<Texture> _texture;
     
 public:
     SpriteBatch() = default;

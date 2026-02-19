@@ -1,19 +1,37 @@
 #ifndef RESOURCE_MANAGER_H
 #define RESOURCE_MANAGER_H
 
-#include "jsonUtils.h"
-
 #include <unordered_map>
 #include <memory>
-#include <vector>
 #include <functional>
+#include <vector>
+#include <string>
+#include <fstream>
+
+#ifdef FLAG_DEBUG
+#include <iostream>
+#endif
+
+namespace mtrs::res
+{
 
 class ResourceManager
 {
 private:
-    std::unordered_map<std::string, std::shared_ptr<simdjson::padded_string>> _jsonCache;
+    struct ResourcePack
+    {
+        std::ifstream file;
+        size_t resourceCount;
+    };
+    std::string _executablePath;
+    std::unordered_map<std::string, ResourcePack> _resourcePacks;
+    std::vector<decltype(_resourcePacks)::const_iterator> _resourcePackItrators;
 
     std::vector<std::function<void()>> _garbageCollectors;
+
+    void move_to_resource(std::ifstream &file, const std::string &resName,
+        const std::string &resTypeName, uint32_t resTypeSize);
+    
 
     template<typename Resource>
     struct cacheWrapper
@@ -22,7 +40,6 @@ private:
         bool initialization = false;
     };
 
-public:
     template<typename Resource>
     std::unordered_map<std::string, std::weak_ptr<Resource>> &get_cache()
     {
@@ -31,47 +48,65 @@ public:
         {
             _garbageCollectors.push_back([&]()
             {
-                for (auto it = wrapper.cache.begin(); it != wrapper.cache.end(); )
-                    if (it->second.expired())
-                        it = wrapper.cache.erase(it);
+                for (auto itRes = wrapper.cache.begin(); itRes != wrapper.cache.end(); )
+                    if (itRes->second.expired())
+                    {
+                        itRes = wrapper.cache.erase(itRes);
+
+                        size_t pos = itRes->first.find_last_of("\\/");
+                        _resourcePacks[itRes->first.substr(0, pos)].resourceCount--;
+                    }
                     else
-                        ++it;
+                        ++itRes;
             });
             wrapper.initialization = true;
         }
         return wrapper.cache;
     }
 
+public:
+    ResourceManager(std::string executablePath, std::string pathResDir);
+    ResourceManager(ResourceManager &) = delete;
+    ResourceManager &operator=(const ResourceManager &) = delete;
+    ResourceManager(ResourceManager &&other) noexcept;
+    ResourceManager &operator=(ResourceManager &&other) noexcept;
+    ~ResourceManager();
+
     void garbage_collector();
 
-    std::shared_ptr<simdjson::padded_string> get_json(const std::string& path);
-
     template<typename Resource>
-    std::shared_ptr<Resource> get_resource(const std::string &resourceName,
-                                        const std::string& patch,
-                                        const std::string& arrayKey)
+    std::shared_ptr<Resource> get_resource(const std::string &resourcePath)
     {
         auto &cache = get_cache<Resource>();
-        auto it = cache.find(resourceName);
-        if(it != cache.end())
-            if(auto existing = it->second.lock())
+        auto itRes = cache.find(resourcePath);
+        if(itRes != cache.end())
+            if(auto existing = itRes->second.lock())
                 return std::static_pointer_cast<Resource>(existing);
-        std::shared_ptr<simdjson::padded_string> json = get_json(patch);
-        simdjson::ondemand::parser parser;
-        simdjson::ondemand::document doc = parser.iterate(*json);
 
-        for(simdjson::ondemand::object obj : get_var_json<simdjson::ondemand::array>(doc[arrayKey]))
+        size_t pos = resourcePath.find_last_of("\\/");
+        auto itPack = _resourcePacks.find(resourcePath.substr(0, pos));
+        if(itPack != _resourcePacks.end())
         {
-            std::string_view name = get_var_json<std::string_view>(obj["name"]);
-            std::shared_ptr<Resource> resource = std::make_shared<Resource>();
-            resource->from_json(obj, *this);
-            cache[resourceName] = resource;
-            if(name == resourceName)
-                return resource;
-        }
+            if(!itPack->second.file.is_open())
+                itPack->second.file.open(itPack->first, std::ios::binary);
+            
+            std::string resTypeName = Resource::get_type_name();
+            uint32_t resTypeSize = Resource::get_type_size();
 
-        throw std::runtime_error(std::string("Can't find the ") + resourceName + arrayKey);
+            move_to_resource(itPack->second.file, resourcePath.substr(pos + 1), resTypeName, resTypeSize);
+            
+            std::shared_ptr<Resource> resource = std::make_shared<Resource>(itPack->second.file);
+#ifdef FLAG_DEBUG
+            if(!resource)
+                std::cerr << "!=== Error: in ResourcePack(" << itPack->first << ')' << std::endl;
+            else
+#endif
+                itPack->second.resourceCount++;
+            return resource;
+        }
     }
 };
+
+}
 
 #endif

@@ -37,7 +37,7 @@ RenderContext &RenderContext::operator=(RenderContext &&other) noexcept
     return *this;
 }
 
-void RenderContext::create_sprite_batch(std::shared_ptr<ShaderProgram> shader, std::shared_ptr<Texture2D> texture)
+void RenderContext::create_sprite_batch(std::shared_ptr<ShaderProgram> shader, std::shared_ptr<Texture> texture)
 {
     u_int64_t id = shader->id() | u_int64_t(texture->id()) << 32;
 
@@ -54,7 +54,7 @@ void RenderContext::create_sprite_batch(std::shared_ptr<ShaderProgram> shader, s
         glGenBuffers(1, &batch._instanceVBO[i]._id);
         glBindBuffer(GL_ARRAY_BUFFER, batch._instanceVBO[i]._id);
         glBufferStorage(GL_ARRAY_BUFFER, SpriteBatch::MAX_INSTANCES * sizeof(InstanceData), nullptr,
-                                   GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+                        GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 
         batch._mappedBuffers[i] = reinterpret_cast<InstanceData*>(glMapBufferRange(
                                   GL_ARRAY_BUFFER, 0, SpriteBatch::MAX_INSTANCES * sizeof(InstanceData),
