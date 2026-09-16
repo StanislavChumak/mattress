@@ -3,7 +3,7 @@
 namespace mtrs::comp
 {
 
-Listener::Listener(void*)
+Listener::Listener()
 {
     
 }

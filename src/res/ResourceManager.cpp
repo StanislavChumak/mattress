@@ -17,16 +17,28 @@
 namespace mtrs::res
 {
 
-ResourceManager::ResourceManager(std::string resource_dir, uint64_t limit_cache)
-: _file_manager(fs::get_files_from_folder(resource_dir, ".mtpck"), limit_cache)
-, _resource_dir(std::move(resource_dir))
+ResourceManager::ResourceManager(std::string pack_dir, std::unordered_set<std::string> paths,
+    uint64_t limit_size_cache)
+: _file_manager(paths, limit_size_cache)
+, _pack_dir(std::move(pack_dir))
+{
+    std::string name;
+    for(auto &path : paths)
+    {
+        name = path.substr(_pack_dir.length(), (path.length() - _pack_dir.length() - 6));
+        _hash_packs.emplace(math::hash64(name), name);
+    }
+}
+
+ResourceManager::ResourceManager(std::string pack_dir, uint64_t limit_size_cache)
+: ResourceManager(pack_dir, fs::get_files_from_folder(pack_dir, ".mtpck"), limit_size_cache)
 {
 }
 
 ResourceManager::ResourceManager(ResourceManager &&other) noexcept
 : _file_manager(std::move(other._file_manager))
 {
-    _resource_dir = std::move(other._resource_dir);
+    _pack_dir = std::move(other._pack_dir);
 }
 
 ResourceManager &ResourceManager::operator=(ResourceManager &&other) noexcept
@@ -34,7 +46,7 @@ ResourceManager &ResourceManager::operator=(ResourceManager &&other) noexcept
     if(this != &other)
     {
         _file_manager = std::move(other._file_manager);
-        _resource_dir = std::move(other._resource_dir);
+        _pack_dir = std::move(other._pack_dir);
     }
     return *this;
 }

@@ -8,6 +8,7 @@
 
 #include "util/fun/str/utf8_to_utf32.hpp"
 #include "util/fun/prs/mtrs_file.hpp"
+#include "util/fun/math/hash.hpp"
 #include "util/type/prs/comp/Label.hpp"
 
 #include <cstring>
@@ -23,10 +24,10 @@ Label::Label(COMPONENT_ARGS)
     std::string str;
 
     prs::set_mtrs_to_var(file_ddata[label.shader], str);
-    shader = resource.get_resource<res::ShaderProgram>(scene, std::move(str));
+    shader = resource.get_resource<res::ShaderProgram>(tmp_hash, std::move(str));
     
     prs::set_mtrs_to_var(file_ddata[label.text], str);
-    auto decoder = world.single_comp<GlyphDecoder>();
+    auto decoder = static_cast<GlyphDecoder*>(world.single_comp(math::hash64(GlyphDecoder::get_type_name())));
     text = decoder->decode_text(str::utf8_to_utf32(str));
 
     layer = label.layer;

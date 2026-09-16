@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <stack>
 #include <string>
+#include <vector>
 
 namespace mtrs::res
 {
@@ -21,13 +22,27 @@ class ECSWorld
 {
     struct Scene
     {
+        uint64_t tmp_hash = 0;
         std::unordered_map<uint64_t, EntityID> local_entities;
-        bool init;
-        bool turn_on;
+        bool turn_on = false;
     };
-    std::unordered_map<std::string, Scene> _scenes;
+
+    enum class SceneOp : uint8_t { Load, Remove, TurnOn, TurnOff };
+
+    struct SceneOperation
+    {
+        SceneOp op = SceneOp::Load;
+        uint64_t tmp_hash = 0;
+        uint64_t scn_hash = 0;
+    };
+
+    std::unordered_map<uint64_t, std::string> _templates;
+    std::unordered_map<uint64_t, Scene> _scenes;
+    std::vector<SceneOperation> _pending_ops;
 
     std::string _scenes_dir;
+
+    res::ResourceManager *_resources = nullptr;
     
     ComponentManager _components;
     prs::MtrsFileManager _file_manager;
@@ -35,7 +50,12 @@ class ECSWorld
     std::deque<EntityID> _destroy_ids;
     std::stack<EntityID> _freed_ids;
 
-    prs::MtrsFileManager::MtrsFile *open_scene(decltype(_scenes)::iterator scene);
+    prs::MtrsFileManager::MtrsFile *open(uint64_t tmp_hash);
+
+    void do_load(uint64_t tmp_hash, uint64_t scn_hash);
+    void do_remove(uint64_t scn_hash);
+    void do_turn_on(uint64_t scn_hash);
+    void do_turn_off(uint64_t scn_hash);
 
     ECSWorld(std::string scenes_dir, std::unordered_set<std::string> paths,
         uint64_t limit_size_cache);
@@ -50,12 +70,8 @@ public:
     ECSWorld &operator=(ECSWorld &&other) noexcept;
     ~ECSWorld();
 
-    void load_scene(std::string scene, mtrs::res::ResourceManager& resource, bool is_turn_on = true);
-    void remove_scene(std::string scene);
-    void turn_on_scene(std::string scene);
-    void turn_off_scene(std::string scene);
-
-    void mark_destroy(EntityID entity);
+// API for engine
+    void set_resources(res::ResourceManager *resources);
 
     void clear_all();
     void update(const double &delta);
@@ -66,35 +82,30 @@ public:
         return _components.view<Components...>();
     }
 
-    template<typename Component>
-    Component* single_comp()
-    {
-        return _components.get_single_comp<Component>();
-    }
-
     template<typename Component, typename ...Args>
-    Component* single_comp(Args&& ...args)
+    Component* init_single_comp(Args&& ...args)
     {
-        return _components.add_single_comp<Component>(args...);
+        return _components.init_single_comp<Component>(args...);
     }
 
-    void *single_comp(uint64_t hash_comp);
+// API for script
+    void load_scene(uint64_t tmp_hash, uint64_t scn_hash);
+    void remove_scene(uint64_t scn_hash);
+    void turn_on_scene(uint64_t scn_hash);
+    void turn_off_scene(uint64_t scn_hash);
 
-    template<typename Component>
-    Component *component(EntityID entity)
-    {
-        return _components.get_comp<Component>(entity);
-    }
+    void mark_destroy(EntityID entity);
 
-    void *component(uint64_t hash_comp, EntityID entity);
+    EntityID get_entity(uint64_t scn_hash, uint64_t ent_hash);
 
-    EntityID get_entity(const char *scene, uint64_t hash_entity);
+    void *single_comp(uint64_t comp_hash);
+    void *component(uint64_t comp_hash, EntityID entity);
 
-    bool save_static_to_file(const char *scene, uint64_t hash_entity,
-        uint64_t hash_comp, size_t field, void *data, size_t size);
+    bool save_static_to_file(uint64_t scn_hash, uint64_t ent_hash,
+        uint64_t comp_hash, size_t field, void *data, size_t size);
 
-    bool save_dynamic_to_file(const char *scene, uint64_t hash_entity,
-        uint64_t hash_comp, size_t field, void *data, size_t size);
+    bool save_dynamic_to_file(uint64_t scn_hash, uint64_t ent_hash,
+        uint64_t comp_hash, size_t field, void *data, size_t size);
 };
 
 }

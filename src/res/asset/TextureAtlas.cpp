@@ -5,6 +5,7 @@
 
 #include "util/fun/prs/mtrs_file.hpp"
 #include "util/fun/msg/mtrs_message.hpp"
+#include "util/fun/math/hash.hpp"
 #include "util/type/prs/res/TextureAtlas.hpp"
 
 #include <string>
@@ -103,7 +104,8 @@ TextureAtlas::TextureAtlas(RESOURCE_ARGS)
 
     std::string texture_name;
     prs::set_mtrs_to_var(file_ddata[atlas.texture], texture_name);
-    auto texture = resources.get_resource<Texture>(dir_pack + pack, texture_name);
+    std::string pack_name = dir_pack.substr(resources.get_pack_dir().size()) + pack;
+    auto texture = resources.get_resource<Texture>(math::hash64(pack_name), texture_name);
 
     if(atlas.spirality)
     {

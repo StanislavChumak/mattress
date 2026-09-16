@@ -5,7 +5,7 @@
 namespace mtrs::comp
 {
 
-MouseButtons::MouseButtons(void*)
+MouseButtons::MouseButtons()
 {
     std::memset(buttons, 0, sizeof(buttons));
 }

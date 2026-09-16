@@ -5,7 +5,7 @@
 namespace mtrs::comp
 {
 
-KeyButtons::KeyButtons(void*)
+KeyButtons::KeyButtons()
 {
     std::memset(keys, 0, sizeof(keys));
 }

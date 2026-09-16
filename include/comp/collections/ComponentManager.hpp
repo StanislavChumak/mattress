@@ -66,7 +66,7 @@ public:
     template<typename Component> bool has_comp(EntityID entity);
 
     template<typename Component> Component *get_single_comp();
-    template<typename Component, typename ...Args> Component *add_single_comp(Args&& ...args);
+    template<typename Component, typename ...Args> Component *init_single_comp(Args&& ...args);
     template<typename Component> void remove_single_comp();
     template<typename Component> bool has_single_comp();
 
@@ -127,7 +127,7 @@ Component *ComponentManager::get_single_comp()
 }
 
 template<typename Component, typename ...Args>
-Component *ComponentManager::add_single_comp(Args&& ...args)
+Component *ComponentManager::init_single_comp(Args&& ...args)
 {
     auto& pool = get_single_pool<Component>();
     pool.component = std::make_unique<Component>(args...);

@@ -3,7 +3,7 @@
 namespace mtrs::comp
 {
 
-MouseScroll::MouseScroll(void*)
+MouseScroll::MouseScroll()
 {
 }
 

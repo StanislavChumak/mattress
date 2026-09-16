@@ -26,13 +26,12 @@ private:
     std::vector<std::pair<res::SpriteBatch*, decltype(res::SpriteBatch::layers)::const_iterator>> _current_layers;
     
 public:
-    Render() = delete;
     Render(const Render&) = delete;
     Render &operator=(const Render&) = delete;
     Render(Render &&other) = delete;
     Render &operator=(Render &&other) = delete;
 
-    Render(void*);
+    Render();
     ~Render() = default;
 
     void submit_batch(const std::shared_ptr<res::ShaderProgram> &shader,

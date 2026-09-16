@@ -11,7 +11,7 @@ struct Impl
     ma_engine engine;
 };
 
-Audio::Audio(void*)
+Audio::Audio()
 {
     ma_engine_config config = ma_engine_config_init();
     config.listenerCount = 1;

@@ -15,13 +15,12 @@ struct KeyButtons : public Component<KeyButtons>
     bool last_keys[349];
     std::unordered_map<uint32_t, std::vector<void(*)()>> subscribers;
 
-    KeyButtons() = delete;
     KeyButtons(const KeyButtons&) = delete;
     KeyButtons &operator=(const KeyButtons&) = delete;
     KeyButtons(KeyButtons&&) = delete;
     KeyButtons &operator=(KeyButtons&&) = delete;
-    
-    KeyButtons(void*);
+
+    KeyButtons();
     ~KeyButtons() = default;
 
     void subscribe(int key, bool action, void(*callback)());

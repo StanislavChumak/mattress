@@ -29,8 +29,8 @@ public:
     static constexpr const char *get_type_name_imp() noexcept { return "ScriptFile"; }
     static uint32_t get_prs_size_imp() noexcept;
 
-    void load(const char *scene, comp::EntityID entity,
-        comp::ECSWorld& world, ResourceManager& resource);
+    void load(uint64_t scn_hash, comp::EntityID entity,
+        comp::ECSWorld &world, ResourceManager &resource);
     void *get_symbol(const char *name);
 };
 

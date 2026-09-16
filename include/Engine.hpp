@@ -31,8 +31,8 @@ namespace engine
     {
         // Base
         std::string executable_path;
-        std::string packs_path = "./";
-        std::string scenes_path = "./";
+        std::string pack_dir = "./";
+        std::string scene_dir = "./";
         std::string name_window = "";
         std::string start_scene = "";
         uint64_t scenes_cache_limit = 5;

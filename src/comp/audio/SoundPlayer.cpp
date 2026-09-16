@@ -6,6 +6,7 @@
 #include "res/asset/Sound.hpp"
 
 #include "util/fun/prs/mtrs_file.hpp"
+#include "util/fun/math/hash.hpp"
 #include "util/type/prs/comp/SoundPlayer.hpp"
 
 #include <cstring>
@@ -20,9 +21,9 @@ SoundPlayer::SoundPlayer(COMPONENT_ARGS)
 
     std::string sound_path;
     prs::set_mtrs_to_var(file_ddata[sound_player.sound], sound_path);
-    sound = resource.get_resource<res::Sound>(scene, sound_path);
+    sound = resource.get_resource<res::Sound>(tmp_hash, sound_path);
 
-    sound->init(world.single_comp<comp::Audio>()->impl);
+    sound->init(static_cast<Audio*>(world.single_comp(math::hash64(Audio::get_type_name())))->impl);
 
     sound->set_volume(sound_player.volume);
 }

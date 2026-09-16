@@ -29,9 +29,10 @@ namespace mtrs::engine
 {
 
 Core::Core(const Config& config)
-: resources(config.executable_path + config.packs_path, config.packs_cache_limit)
-, world(config.executable_path + config.scenes_path, config.scenes_cache_limit)
+: resources(config.executable_path + config.pack_dir, config.packs_cache_limit)
+, world(config.executable_path + config.scene_dir, config.scenes_cache_limit)
 {
+    world.set_resources(&resources);
 #ifndef FLAG_RELEASE
     if(!config.fixed_horizontal && !config.fixed_vertical)
     {
@@ -50,7 +51,7 @@ Core::Core(const Config& config)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    _window = world.single_comp<comp::Window>(config.size_in_points * config.start_point_size, config.name_window.c_str());
+    _window = world.init_single_comp<comp::Window>(config.size_in_points * config.start_point_size, config.name_window.c_str());
     const glm::uvec2 &window_size = _window->size.get();
 
     _window->poiter = glfwCreateWindow(window_size.x, window_size.y, _window->name, nullptr, nullptr);
@@ -91,13 +92,13 @@ Core::Core(const Config& config)
 
     glfwSwapInterval(0);
 
-    _states = world.single_comp<comp::States>(config.init_state);
-    _camera = world.single_comp<comp::Camera>(_window, glm::bvec2{config.fixed_horizontal,
+    _states = world.init_single_comp<comp::States>(config.init_state);
+    _camera = world.init_single_comp<comp::Camera>(_window, glm::bvec2{config.fixed_horizontal,
         config.fixed_vertical}, config.size_in_points);
-    _cursor = world.single_comp<comp::Cursor>(_camera);
-    _keyboard = world.single_comp<comp::KeyButtons>(nullptr);
-    _mouse = world.single_comp<comp::MouseButtons>(nullptr);
-    _scroll = world.single_comp<comp::MouseScroll>(nullptr);
+    _cursor = world.init_single_comp<comp::Cursor>(_camera);
+    _keyboard = world.init_single_comp<comp::KeyButtons>();
+    _mouse = world.init_single_comp<comp::MouseButtons>();
+    _scroll = world.init_single_comp<comp::MouseScroll>();
 
 #ifndef FLAG_RELEASE
     msg::mtrs_info("Renderer: ", glGetString(GL_RENDERER));
@@ -105,7 +106,7 @@ Core::Core(const Config& config)
     msg::mtrs_info("GLSL Version: ", glGetString(GL_SHADING_LANGUAGE_VERSION));
 #endif
 
-    comp::Audio *audio = world.single_comp<comp::Audio>(nullptr);
+    comp::Audio *audio = world.init_single_comp<comp::Audio>();
     if(audio)
     {
         audio->sound_scale = config.saund_location_scale;
@@ -125,9 +126,9 @@ Core::Core(const Config& config)
     
     if(config.blend) { glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);}
 
-    world.single_comp<comp::GlyphDecoder>(resources);
+    world.init_single_comp<comp::GlyphDecoder>(resources);
 
-    comp::Render *render = world.single_comp<comp::Render>(nullptr);
+    comp::Render *render = world.init_single_comp<comp::Render>();
     sys::RenderSystem::render = render;
     sys::SpriteSubmitSystem::render = render;
     sys::SpriteMapSubmitSystem::render = render;
@@ -154,7 +155,7 @@ Core::Core(const Config& config)
     else
 #endif
     {
-        world.load_scene(config.start_scene, resources);
+        world.load_scene(math::hash64(config.start_scene), math::hash64("start_scene"));
     }
     
     _is_init = true;

@@ -16,13 +16,12 @@ struct MouseScroll : public Component<MouseScroll>
     glm::dvec2 last_scroll = glm::dvec2{0.0};
     std::vector<void(*)()> subscribers;
 
-    MouseScroll() = delete;
     MouseScroll(const MouseScroll&) = delete;
     MouseScroll &operator=(const MouseScroll&) = delete;
     MouseScroll(MouseScroll&&) = delete;
     MouseScroll &operator=(MouseScroll&&) = delete;
-    
-    MouseScroll(void*);
+
+    MouseScroll();
     ~MouseScroll() = default;
 
     void subscribe(void(*callback)());

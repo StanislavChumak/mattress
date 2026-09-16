@@ -10,7 +10,7 @@
 namespace mtrs::comp
 {
 
-Render::Render(void*)
+Render::Render()
 {
     const float quad[] = {
         -0.5f, -0.5f,  0.0f, 0.0f,

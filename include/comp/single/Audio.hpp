@@ -18,14 +18,15 @@ struct Audio : public Component<Audio>
     float music_volume = 1.f;
     bool cache_volume_dirty = false;
 
-    Audio() = delete;
     Audio(const Audio &) = delete;
     Audio &operator=(const Audio&) = delete;
     Audio(Audio&&) = delete;
     Audio &operator=(Audio&&) = delete;
     
-    Audio(void*);
+    Audio();
     ~Audio();
+
+    static constexpr const char *get_type_name_imp() noexcept { return "Audio"; }
 };
 
 }

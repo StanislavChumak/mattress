@@ -6,6 +6,7 @@
 
 #include "util/fun/prs/mtrs_file.hpp"
 #include "util/fun/msg/mtrs_message.hpp"
+#include "util/fun/math/hash.hpp"
 #include "util/fun/str/utf8_to_utf32.hpp"
 #include "util/type/prs/res/Font.hpp"
 
@@ -23,7 +24,8 @@ Font::Font(RESOURCE_ARGS)
     std::string str_buffer;
 
     prs::set_mtrs_to_var(file_ddata[font.texture], str_buffer);
-    texture = resources.get_resource<Texture>(dir_pack + pack, std::move(str_buffer));
+    std::string pack_name = dir_pack.substr(resources.get_pack_dir().size()) + pack;
+    texture = resources.get_resource<Texture>(math::hash64(pack_name), std::move(str_buffer));
 
     prs::set_mtrs_to_var(file_ddata[font.symbols], str_buffer);
     _symbols = str::utf8_to_utf32(std::move(str_buffer));

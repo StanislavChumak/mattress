@@ -35,8 +35,8 @@ public:
     }
 };
 
-#define COMPONENT_ARGS mtrs::comp::EntityID entity, const char* scene, \
+#define COMPONENT_ARGS mtrs::comp::EntityID entity, uint64_t scn_hash, uint64_t tmp_hash, \
     char *file_data, std::unordered_map<uint64_t, mtrs::prs::DeferredData> &file_ddata, \
-    mtrs::comp::ECSWorld& world, mtrs::res::ResourceManager& resource    
+    mtrs::comp::ECSWorld& world, mtrs::res::ResourceManager& resource   
 
 #endif

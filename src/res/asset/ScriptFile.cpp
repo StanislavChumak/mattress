@@ -83,11 +83,6 @@ ScriptFile::~ScriptFile()
         fs::free_library(_handle);
         _handle = nullptr;
     }
-
-    if(_api.scene)
-    {
-        delete[] _api.scene;
-    }
 }
 
 uint32_t ScriptFile::get_prs_size_imp() noexcept
@@ -95,15 +90,13 @@ uint32_t ScriptFile::get_prs_size_imp() noexcept
     return sizeof(prs::ScriptFile);
 }
 
-void ScriptFile::load(const char *scene, comp::EntityID entity,
+void ScriptFile::load(uint64_t scn_hash, comp::EntityID entity,
     comp::ECSWorld& world, ResourceManager& resource)
 {
     // base
     _api.world = &world;
     _api.resource = &resource;
-    char *copy = new char[strlen(scene)+1];
-    strcpy(copy, scene);
-    _api.scene = copy;
+    _api.scn_hash = scn_hash;
 
     // util
 #ifndef FLAG_RELEASE
@@ -114,23 +107,23 @@ void ScriptFile::load(const char *scene, comp::EntityID entity,
 #endif
 
     // ECSWorld
-    _api.world_load_scene = [](comp::ECSWorld*w, res::ResourceManager*r, const char*s, bool is)
-        { w->load_scene(s, *r, is); };
-    _api.world_remove_scene = [](comp::ECSWorld*w, const char*s)
+    _api.world_load_scene = [](comp::ECSWorld*w, res::ResourceManager*, uint64_t t, uint64_t i)
+        { w->load_scene(t, i); };
+    _api.world_remove_scene = [](comp::ECSWorld*w, uint64_t s)
         { w->remove_scene(s); };
-    _api.world_turn_on_scene = [](comp::ECSWorld*w, const char*s)
+    _api.world_turn_on_scene = [](comp::ECSWorld*w, uint64_t s)
         { w->turn_on_scene(s); };
-    _api.world_turn_off_scene = [](comp::ECSWorld*w, const char*s)
+    _api.world_turn_off_scene = [](comp::ECSWorld*w, uint64_t s)
         { w->turn_off_scene(s); };
     _api.world_single_comp = [](comp::ECSWorld*w, uint64_t c)
         { return w->single_comp(c); };
     _api.world_component = [](comp::ECSWorld*w, uint64_t c, comp::EntityID e)
         { return w->component(c, e); };
-    _api.world_get_entity = [](comp::ECSWorld*w, const char *s, uint64_t h)
+    _api.world_get_entity = [](comp::ECSWorld*w, uint64_t s, uint64_t h)
         { return w->get_entity(s, h); };
-    _api.world_save_static = [](comp::ECSWorld*w, const char*s, uint64_t e, uint64_t c, uint64_t f, void*d, uint64_t sz)
+    _api.world_save_static = [](comp::ECSWorld*w, uint64_t s, uint64_t e, uint64_t c, uint64_t f, void*d, uint64_t sz)
         { return w->save_static_to_file(s, e, c, f, d, sz); };
-    _api.world_save_dynamic = [](comp::ECSWorld*w, const char*s, uint64_t e, uint64_t c, uint64_t f, void*d, uint64_t sz)
+    _api.world_save_dynamic = [](comp::ECSWorld*w, uint64_t s, uint64_t e, uint64_t c, uint64_t f, void*d, uint64_t sz)
         { return w->save_dynamic_to_file(s, e, c, f, d, sz); };
 
     // window

@@ -28,7 +28,7 @@ void GlyphDecoder::submit_font(std::string path)
     {
         if(font == path) return;
     }
-    auto font = _resources.get_resource<res::Font>("", path);
+    auto font = _resources.get_resource<res::Font>(0, path);
     for(auto glyph : *font)
     {
         _glyph_map.emplace(glyph.symbol , std::pair{_fonts.size(), glyph});
@@ -58,7 +58,7 @@ res::Text GlyphDecoder::decode_text(std::u32string string)
     text.string = std::move(string);
 
     auto g = glyph(text.string[0]);
-    text.fonts.push_back(_resources.get_resource<res::Font>("", g.first));
+    text.fonts.push_back(_resources.get_resource<res::Font>(0, g.first));
     text.glyphs.push_back({0, {}});
     text.space_size = g.second.size;
     const std::string *last_font = &g.first;
@@ -73,7 +73,7 @@ res::Text GlyphDecoder::decode_text(std::u32string string)
         {
             last_font = &g.first;
             size_t index = text.fonts.size();
-            std::shared_ptr<res::Font> font = _resources.get_resource<res::Font>("", g.first);
+            std::shared_ptr<res::Font> font = _resources.get_resource<res::Font>(0, g.first);
             for(size_t i = 0; i < text.fonts.size(); i++)
             {
                 if(text.fonts[i] == font)

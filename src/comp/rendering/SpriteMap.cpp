@@ -21,13 +21,13 @@ SpriteMap::SpriteMap(COMPONENT_ARGS)
     std::string path_buffer;
 
     prs::set_mtrs_to_var(file_ddata[sprite_map.shader], path_buffer);
-    shader = resource.get_resource<res::ShaderProgram>(scene, path_buffer);
+    shader = resource.get_resource<res::ShaderProgram>(tmp_hash, path_buffer);
 
     prs::set_mtrs_to_var(file_ddata[sprite_map.texture], path_buffer);
-    texture = resource.get_resource<res::Texture>(scene, path_buffer);
+    texture = resource.get_resource<res::Texture>(tmp_hash, path_buffer);
 
     prs::set_mtrs_to_var(file_ddata[sprite_map.atlas], path_buffer);
-    atlas = resource.get_resource<res::TextureAtlas>(scene, path_buffer);
+    atlas = resource.get_resource<res::TextureAtlas>(tmp_hash, path_buffer);
 
     std::vector<uint32_t> buffer_types;
     prs::set_mtrs_to_var(file_ddata[sprite_map.cell_types], buffer_types);

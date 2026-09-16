@@ -3,6 +3,7 @@
 
 #include "util/type/prs/MtrsFileManager.hpp"
 #include "util/fun/msg/mtrs_message.hpp"
+#include "util/fun/math/hash.hpp"
 
 #include <memory>
 #include <vector>
@@ -16,7 +17,9 @@ class ResourceManager
 private:
     prs::MtrsFileManager _file_manager;    
 
-    std::string _resource_dir;
+    std::string _pack_dir;
+
+    std::unordered_map<uint64_t, std::string> _hash_packs;
 
     size_t get_pos_resource(char *data, size_t end, const std::string &res_name,
         const std::string &prs_name, uint32_t prs_size);
@@ -35,8 +38,11 @@ private:
         return wrapper;
     }
 
+    ResourceManager(std::string pack_dir, std::unordered_set<std::string> paths,
+        uint64_t limit_size_cache);
+
 public:
-    ResourceManager(std::string resource_dir, uint64_t limit_cache);
+    ResourceManager(std::string pack_dir, uint64_t limit_size_cache);
 
     ResourceManager() = delete;
     ResourceManager(ResourceManager &) = delete;
@@ -48,16 +54,34 @@ public:
     void update(const double &delta);
     void clear_all();
 
+    const std::string &get_pack_dir() const noexcept { return _pack_dir; }
+
     template<typename Resource>
-    std::shared_ptr<Resource> get_resource(std::string pack, std::string resource_name)
+    std::shared_ptr<Resource> get_resource(uint64_t pack_hash, std::string resource_name)
     {
         size_t str_pos = resource_name.find_last_of("\\/");
+        std::string pack;
         if(str_pos != std::string::npos)
         {
             pack = resource_name.substr(0, str_pos);
             resource_name = resource_name.substr(str_pos + 1);
         }
-        if(pack.find(_resource_dir) == 0) pack = pack.substr(_resource_dir.length());
+        else
+        {
+            auto it = _hash_packs.find(pack_hash);
+#ifndef FLAG_RELEASE
+            if(it == _hash_packs.end())
+            {
+                msg::mtrs_error("There is no pack named \"", math::rehash64(pack_hash),"\" in the ResourceManager");
+                pack = "null";
+            }
+            else
+#endif
+            {
+                pack = it->second;
+            }
+        }
+        if(pack.find(_pack_dir) == 0) pack = pack.substr(_pack_dir.length());
         auto &cache = get_cache<Resource>();
         std::string full_res_name = pack + '/' + resource_name;
         auto it_res = cache.map.find(full_res_name);
@@ -74,7 +98,7 @@ public:
             cache.keys.push_back(full_res_name);
         }
 
-        auto file = _file_manager.get_file(_resource_dir + pack + ".mtpck");
+        auto file = _file_manager.get_file(_pack_dir + pack + ".mtpck");
         if(file)
         {
             std::string prs_name = Resource::get_type_name();
@@ -92,7 +116,7 @@ public:
             
             std::shared_ptr<Resource> resource;
             str_pos = pack.find_last_of("\\/") + 1;
-            resource = std::make_shared<Resource>(_resource_dir + pack.substr(0, str_pos),
+            resource = std::make_shared<Resource>(_pack_dir + pack.substr(0, str_pos),
                 pack.substr(str_pos), file->data.data() + res_pos, file->deferred_data, *this);
 
 #ifndef FLAG_RELEASE
