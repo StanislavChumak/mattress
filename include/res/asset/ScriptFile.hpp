@@ -31,7 +31,7 @@ public:
 
     void load(const char *scene, comp::EntityID entity,
         comp::ECSWorld& world, ResourceManager& resource);
-    void *get_symbol(std::string &&name);
+    void *get_symbol(const char *name);
 };
 
 }

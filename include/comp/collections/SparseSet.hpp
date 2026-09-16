@@ -33,16 +33,15 @@ public:
             _sparse.resize(entity + 1, NULL_ENTITY);
         }
         
-        if (_sparse[entity] != NULL_ENTITY)
+        if (_sparse[entity] == NULL_ENTITY)
         {
-            _dense[_sparse[entity]] = std::make_unique<TypeComponent>(args...);
-            return _dense[_sparse[entity]].get();
+            _sparse[entity] = _size;
+            _entities.push_back(entity);
+            _dense.push_back(std::unique_ptr<TypeComponent>(nullptr));
+            _size++;
         }
-        
-        _sparse[entity] = _size;
-        _entities.push_back(entity);
-        _dense.push_back(std::make_unique<TypeComponent>(args...));
-        _size++;
+
+        _dense[_sparse[entity]] = std::make_unique<TypeComponent>(args...);
         return _dense[_sparse[entity]].get();
     }
 

@@ -47,10 +47,8 @@ Texture::Texture(RESOURCE_ARGS)
 
     switch (channels)
     {
-    case 4:
-        _mode = GL_RGBA;break;
-    case 3:
-        _mode = GL_RGB;
+    case 4: _mode = GL_RGBA; break;
+    case 3: _mode = GL_RGB;  break;
     }
     glGenTextures(1, &_ID);
     glActiveTexture(GL_TEXTURE0 + _number);

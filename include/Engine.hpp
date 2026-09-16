@@ -31,7 +31,7 @@ namespace engine
     {
         // Base
         std::string executable_path;
-        std::string resurce_path = "./";
+        std::string packs_path = "./";
         std::string scenes_path = "./";
         std::string name_window = "";
         std::string start_scene = "";

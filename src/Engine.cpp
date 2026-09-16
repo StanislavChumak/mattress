@@ -29,8 +29,8 @@ namespace mtrs::engine
 {
 
 Core::Core(const Config& config)
-: resources(config.executable_path, config.resurce_path, config.packs_cache_limit)
-, world(config.executable_path, config.scenes_path, config.scenes_cache_limit)
+: resources(config.executable_path + config.packs_path, config.packs_cache_limit)
+, world(config.executable_path + config.scenes_path, config.scenes_cache_limit)
 {
 #ifndef FLAG_RELEASE
     if(!config.fixed_horizontal && !config.fixed_vertical)
@@ -223,6 +223,10 @@ void window_size_callback(GLFWwindow *window, int width, int height)
         }
         core->_camera->viewport.update();
         core->_camera->update_proj_matrix();
+        core->_input_callbacks.reserve(core->_input_callbacks.size() +
+            core->_window->size_subscribers.size());
+        core->_input_callbacks.insert(core->_input_callbacks.end(),
+            core->_window->size_subscribers.begin(), core->_window->size_subscribers.end());
     }
 }
 

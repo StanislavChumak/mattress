@@ -30,6 +30,16 @@ glm::ivec2 Window::get_position()
     return api->window_get_position(this);
 }
 
+void Window::subscribe_to_size(void (*callback)())
+{
+    api->window_subscribe_to_size(this, callback);
+}
+
+void Window::unsubscribe_to_size(void (*callback)())
+{
+    api->window_unsubscribe_to_size(this, callback);
+}
+
 void Camera::update_UBO()
 {
     api->camera_update_UBO(this);

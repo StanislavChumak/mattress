@@ -31,7 +31,7 @@ ScriptFile::ScriptFile(RESOURCE_ARGS)
     prs::set_mtrs_to_var(file_ddata[script_file.path], path);
     path = path.substr(0, path.rfind('.'));
 
-    _handle = fs::load_library(dir_pack + path + fs::lib_extension());
+    _handle = fs::load_library((dir_pack + path + fs::lib_extension()).c_str());
 #ifndef FLAG_RELEASE
     if (_handle)
     {
@@ -138,6 +138,8 @@ void ScriptFile::load(const char *scene, comp::EntityID entity,
     _api.window_set_position = [](comp::Window*w, glm::uvec2 v){ w->set_position(v); };
     _api.window_set_full_screen = [](comp::Window*w, bool is){ w->set_full_screen(is); };
     _api.window_get_position = [](comp::Window*w){ return w->get_position(); };
+    _api.window_subscribe_to_size = [](comp::Window*w, void (*c)()){ w->subscribe_to_size(c); };
+    _api.window_unsubscribe_to_size = [](comp::Window*w, void (*c)()){ w->unsubscribe_to_size(c); };
 
     // camera
     _api.camera_update_UBO = [](comp::Camera*c){ c->update_UBO(); };
@@ -149,28 +151,20 @@ void ScriptFile::load(const char *scene, comp::EntityID entity,
     _api.decoder_decode_text = [](comp::GlyphDecoder*d, const char32_t*s){ return d->decode_text(s); };
 
     // key buttons
-    _api.key_subscribe = [](mtrs::comp::KeyButtons *keybord, int key, bool action, void (*callback)())
-        { keybord->subscribe(key, action, callback); };
-    _api.key_unsubscribe = [](mtrs::comp::KeyButtons *keybord, int key, bool action, void (*callback)())
-        { keybord->unsubscribe(key, action, callback); };
+    _api.key_subscribe = [](comp::KeyButtons*kb, int k, bool a, void (*c)()){ kb->subscribe(k, a, c); };
+    _api.key_unsubscribe = [](comp::KeyButtons *kb, int k, bool a, void (*c)()){ kb->unsubscribe(k, a, c); };
 
     // mouse buttons
-    _api.mouse_subscribe = [](mtrs::comp::MouseButtons *mouse, int button, bool action, void (*callback)())
-        { mouse->subscribe(button, action, callback); };
-    _api.mouse_unsubscribe = [](mtrs::comp::MouseButtons *mouse, int button, bool action, void (*callback)())
-        { mouse->unsubscribe(button, action, callback); };
+    _api.mouse_subscribe = [](comp::MouseButtons *ms, int b, bool a, void (*c)()){ ms->subscribe(b, a, c); };
+    _api.mouse_unsubscribe = [](comp::MouseButtons *ms, int b, bool a, void (*c)()){ ms->unsubscribe(b, a, c); };
     
     // mouse scroll
-    _api.scroll_subscribe = [](mtrs::comp::MouseScroll *scroll, void (*callback)())
-        { scroll->subscribe(callback); };
-    _api.scroll_unsubscribe = [](mtrs::comp::MouseScroll *scroll, void (*callback)())
-        { scroll->unsubscribe(callback); };
+    _api.scroll_subscribe = [](comp::MouseScroll *sc, void (*c)()){ sc->subscribe(c); };
+    _api.scroll_unsubscribe = [](comp::MouseScroll *sc, void (*c)()){ sc->unsubscribe(c); };
     
     // cursor
-    _api.cursor_subscribe = [](mtrs::comp::Cursor *cursor, void (*callback)())
-        { cursor->subscribe(callback); };
-    _api.cursor_unsubscribe = [](mtrs::comp::Cursor *cursor, void (*callback)())
-        { cursor->unsubscribe(callback); };
+    _api.cursor_subscribe = [](comp::Cursor *crs, void (*c)()){ crs->subscribe(c); };
+    _api.cursor_unsubscribe = [](comp::Cursor *crs, void (*c)()){ crs->unsubscribe(c); };
 
     
     // script file
@@ -182,16 +176,24 @@ void ScriptFile::load(const char *scene, comp::EntityID entity,
     _on_load(entity, &_api);
 }
 
-void *ScriptFile::get_symbol(std::string &&name)
+void *ScriptFile::get_symbol(const char *name)
 {
 #ifndef FLAG_RELEASE
     if(!_handle)
     {
-        msg::mtrs_error("attempt to get a ", name, " from a script that is not loaded");
+        msg::mtrs_error("Attempt to get a ", name, " from a script that is not loaded");
         return nullptr;
     }
-#endif
+    void *symbol = fs::get_symbol(_handle, name);
+    if(!symbol)
+    {
+        msg::mtrs_error("Failed to obtain \"", name,"\" due to: ", fs::get_last_error());
+    }
+    return symbol;
+#elif
     return fs::get_symbol(_handle, name);
+#endif
+    
 }
 
 }

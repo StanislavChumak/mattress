@@ -16,7 +16,6 @@ class ResourceManager
 private:
     prs::MtrsFileManager _file_manager;    
 
-    std::string _executable_path;
     std::string _resource_dir;
 
     size_t get_pos_resource(char *data, size_t end, const std::string &res_name,
@@ -37,7 +36,7 @@ private:
     }
 
 public:
-    ResourceManager(const std::string &executable_path,const std::string &resource_dir, uint64_t limit_cache);
+    ResourceManager(std::string resource_dir, uint64_t limit_cache);
 
     ResourceManager() = delete;
     ResourceManager(ResourceManager &) = delete;

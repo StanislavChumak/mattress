@@ -74,6 +74,8 @@ namespace mtrs
         void (*window_set_position)(comp::Window*, glm::uvec2) = nullptr;
         void (*window_set_full_screen)(comp::Window*, bool) = nullptr;
         glm::ivec2 (*window_get_position)(comp::Window*) = nullptr;
+        void (*window_subscribe_to_size)(comp::Window*, void(*)()) = nullptr;
+        void (*window_unsubscribe_to_size)(comp::Window*, void(*)()) = nullptr;
 
         // Camera
         void (*camera_update_UBO)(comp::Camera*) = nullptr;

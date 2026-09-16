@@ -27,7 +27,6 @@ class ECSWorld
     };
     std::unordered_map<std::string, Scene> _scenes;
 
-    std::string _executable_path;
     std::string _scenes_dir;
     
     ComponentManager _components;
@@ -38,11 +37,11 @@ class ECSWorld
 
     prs::MtrsFileManager::MtrsFile *open_scene(decltype(_scenes)::iterator scene);
 
-    ECSWorld(const std::string &executable_path, const std::string &scenes_path,
-        std::unordered_set<std::string> paths, uint64_t limit_size_cache);
+    ECSWorld(std::string scenes_dir, std::unordered_set<std::string> paths,
+        uint64_t limit_size_cache);
 
 public:
-    ECSWorld(const std::string &executable_path,const std::string &scenes_path, uint64_t limit_size_cache);
+    ECSWorld(std::string scenes_dir, uint64_t limit_size_cache);
     
     ECSWorld() = delete;
     ECSWorld(ECSWorld &) = delete;

@@ -17,17 +17,15 @@
 namespace mtrs::res
 {
 
-ResourceManager::ResourceManager(const std::string &executable_path,const std::string &resource_path,
-    uint64_t limit_cache)
-: _file_manager(fs::get_files_from_folder(resource_path, ".mtpck"), limit_cache)
-, _executable_path(executable_path), _resource_dir(resource_path)
+ResourceManager::ResourceManager(std::string resource_dir, uint64_t limit_cache)
+: _file_manager(fs::get_files_from_folder(resource_dir, ".mtpck"), limit_cache)
+, _resource_dir(std::move(resource_dir))
 {
 }
 
 ResourceManager::ResourceManager(ResourceManager &&other) noexcept
 : _file_manager(std::move(other._file_manager))
 {
-    _executable_path = std::move(other._executable_path);
     _resource_dir = std::move(other._resource_dir);
 }
 
@@ -36,7 +34,6 @@ ResourceManager &ResourceManager::operator=(ResourceManager &&other) noexcept
     if(this != &other)
     {
         _file_manager = std::move(other._file_manager);
-        _executable_path = std::move(other._executable_path);
         _resource_dir = std::move(other._resource_dir);
     }
     return *this;

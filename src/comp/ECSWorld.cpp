@@ -52,22 +52,21 @@ X(MouseScroll)
 namespace mtrs::comp
 {
 
-ECSWorld::ECSWorld(const std::string &executable_path,const std::string &scenes_path,
-    std::unordered_set<std::string> paths, uint64_t limit_size_cache)
-: _file_manager(paths, limit_size_cache), _executable_path(executable_path), _scenes_dir(scenes_path)
+ECSWorld::ECSWorld(std::string scenes_dir, std::unordered_set<std::string> paths,
+    uint64_t limit_size_cache)
+: _file_manager(paths, limit_size_cache), _scenes_dir(std::move(scenes_dir))
 {
     _scenes.reserve(paths.size());
     std::string name;
     for(auto &path : paths)
     {
-        name = path.substr(scenes_path.length(), (path.length() - scenes_path.length() - 6));
+        name = path.substr(_scenes_dir.length(), (path.length() - _scenes_dir.length() - 6));
         _scenes.emplace(name, Scene{{}, false, false});
     }
 }
 
-ECSWorld::ECSWorld(const std::string &executable_path, const std::string &scenes_path,
-    uint64_t limit_size_cache)
-: ECSWorld(executable_path, scenes_path, fs::get_files_from_folder(scenes_path, ".mtscn"), limit_size_cache)
+ECSWorld::ECSWorld(std::string scenes_dir, uint64_t limit_size_cache)
+: ECSWorld(scenes_dir, fs::get_files_from_folder(scenes_dir, ".mtscn"), limit_size_cache)
 {
 }
 
@@ -75,7 +74,6 @@ ECSWorld::ECSWorld(ECSWorld &&other) noexcept
 : _file_manager(std::move(other._file_manager))
 {
     _scenes = std::move(other._scenes);
-    _executable_path = std::move(other._executable_path);
     _scenes_dir = std::move(other._scenes_dir);
     _components = std::move(other._components);
     _destroy_ids = std::move(other._destroy_ids);
@@ -87,7 +85,6 @@ ECSWorld &ECSWorld::operator=(ECSWorld &&other) noexcept
     if(this != &other)
     {
         _scenes = std::move(other._scenes);
-        _executable_path = std::move(other._executable_path);
         _scenes_dir = std::move(other._scenes_dir);
         _components = std::move(other._components);
         _file_manager = std::move(other._file_manager);
@@ -107,7 +104,7 @@ prs::MtrsFileManager::MtrsFile *ECSWorld::open_scene(decltype(_scenes)::iterator
 #ifndef FLAG_RELEASE
     if(scene == _scenes.end())
     {
-        msg::mtrs_error("Failed to load scene,"," there is no such scene in the list");
+        msg::mtrs_error("Failed to load scene, there is no such scene in the list");
         return nullptr;
     }
 #endif
@@ -130,13 +127,6 @@ prs::MtrsFileManager::MtrsFile *ECSWorld::open_scene(decltype(_scenes)::iterator
 void ECSWorld::load_scene(std::string scene, mtrs::res::ResourceManager& resource, bool is_turn_on)
 {
     auto scene_iter = _scenes.find(scene);
-    if(scene_iter->second.init)
-    {
-#ifndef FLAG_RELEASE
-        msg::mtrs_warning("Attempting to load already loaded scene: ", scene);
-#endif
-        return;
-    }
     auto file = open_scene(scene_iter);
     if(!file) return;
 
@@ -350,6 +340,7 @@ bool ECSWorld::save_static_to_file(const char *scene, uint64_t hash_entity,
     uint64_t hash_comp, size_t field, void *new_data, size_t size)
 {
     auto scene_iter = _scenes.find(scene);
+    auto file = open_scene(scene_iter);
     if(scene_iter == _scenes.end())
     {
 #ifndef FLAG_RELEASE
@@ -358,7 +349,6 @@ bool ECSWorld::save_static_to_file(const char *scene, uint64_t hash_entity,
 #endif
         return false;
     }
-    auto file = open_scene(scene_iter);
     if(!file) return false;
 
     char *data = file->data.data();
@@ -427,6 +417,7 @@ bool ECSWorld::save_dynamic_to_file(const char *scene, uint64_t hash_entity,
     uint64_t hash_comp, size_t field, void *new_data, size_t size)
 {
     auto scene_iter = _scenes.find(scene);
+    auto file = open_scene(scene_iter);
     if(scene_iter == _scenes.end())
     {
 #ifndef FLAG_RELEASE
@@ -435,7 +426,6 @@ bool ECSWorld::save_dynamic_to_file(const char *scene, uint64_t hash_entity,
 #endif
         return false;
     }
-    auto file = open_scene(scene_iter);
     if(!file) return false;
 
     char *data = file->data.data();

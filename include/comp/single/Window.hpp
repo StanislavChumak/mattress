@@ -17,6 +17,8 @@
 
 #include "glm/vec2.hpp"
 
+#include <vector>
+
 namespace mtrs::comp
 {
 
@@ -34,6 +36,7 @@ private:
 public:
     const char *name;
     react::ReactiveStruct<glm::uvec2, 2> size;
+    std::vector<void(*)()> size_subscribers;
 
     Window() = delete;
     Window(const Window &) = delete;
@@ -49,6 +52,9 @@ public:
     void set_full_screen(bool is_full_screen);
 
     glm::ivec2 get_position();
+
+    void subscribe_to_size(void(*callback)());
+    void unsubscribe_to_size(void(*callback)());
 
     static constexpr const char *get_type_name_imp() noexcept { return "Window"; }
 };

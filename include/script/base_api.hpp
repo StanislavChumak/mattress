@@ -17,9 +17,9 @@ extern mtrs::EngineAPI *api;
 
 namespace mtrs::res
 {
-    void *ScriptFile::get_symbol(std::string &&name)
+    void *ScriptFile::get_symbol(const char *name)
     {
-        return api->script_get_symbol(this, name.c_str());
+        return api->script_get_symbol(this, name);
     }
 }
 

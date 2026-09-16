@@ -79,4 +79,20 @@ glm::ivec2 Window::get_position()
     return pos;
 }
 
+void Window::subscribe_to_size(void(*callback)())
+{
+    size_subscribers.push_back(callback);
+}
+
+void Window::unsubscribe_to_size(void(*callback)())
+{
+    for(auto iter = size_subscribers.begin(); iter != size_subscribers.end(); iter++)
+    {
+        if(*iter == callback)
+        {
+            size_subscribers.erase(iter);
+        }
+    }
+}
+
 }
