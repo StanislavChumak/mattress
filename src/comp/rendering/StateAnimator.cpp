@@ -42,7 +42,7 @@ void StateAnimator::set_state(std::string state)
         return;
     }
     current_state = iter->first;
-#elif
+#else
     current_state = math::hash32(state);
 #endif
     dirty = true;

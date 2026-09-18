@@ -116,8 +116,8 @@ prs::MtrsFileManager::MtrsFile *ECSWorld::open(uint64_t tmp_hash)
 #ifndef FLAG_RELEASE
     if(tmp_iter == _templates.end())
     {
-        msg::mtrs_error("Failed to open scene, scene template naming \"",
-            math::rehash64(tmp_hash),"\" does not exist");
+        msg::mtrs_error("Failed to open scene, "
+            "scene template naming \"", math::rehash64(tmp_hash),"\" does not exist");
         return nullptr;
     }
 #endif
@@ -129,7 +129,7 @@ prs::MtrsFileManager::MtrsFile *ECSWorld::open(uint64_t tmp_hash)
     if(!file || magic != "mtrsscn")
     {
         msg::mtrs_error("Failed to open scene,",
-            " scene template naming \"", math::rehash64(tmp_hash),
+            " scene template \"", math::rehash64(tmp_hash),
             "\" does not have the magic mtrsscn ", magic);
         return nullptr;
     }
@@ -143,26 +143,27 @@ void ECSWorld::load_scene(uint64_t tmp_hash, uint64_t scn_hash)
 #ifndef FLAG_RELEASE
     if(!_templates.count(tmp_hash))
     {
-        msg::mtrs_error("Failed to load scene, there is no template naming \"",
-            math::rehash64(tmp_hash), '"');
+        msg::mtrs_error("Failed to load scene, "
+            "there is no template \"", math::rehash64(tmp_hash), '"');
         return;
     }
 #endif
-
     _pending_ops.push_back({SceneOp::Load, tmp_hash, scn_hash});
 }
 
 void ECSWorld::do_load(uint64_t tmp_hash, uint64_t scn_hash)
 {
     auto file = open(tmp_hash);
+#ifndef FLAG_RELEASE
     if(!file) return;
+#endif
 
     auto [scene_iter, inserted] = _scenes.try_emplace(scn_hash, Scene{tmp_hash, {}, true});
 #ifndef FLAG_RELEASE
     if(!inserted)
     {
-        msg::mtrs_warning("Failed to load scene, there is already an instance named \"",
-            math::rehash64(scn_hash), '"');
+        msg::mtrs_warning("Failed to load scene, "
+            "there is already an scene named \"", math::rehash64(scn_hash), '"');
         return;
     }
 #endif
@@ -170,28 +171,35 @@ void ECSWorld::do_load(uint64_t tmp_hash, uint64_t scn_hash)
     char *data = file->data.data();
     size_t cur = 16;
 
-    uint32_t entity_count = 0;
-    uint32_t data_offset;
-    uint32_t dynamic_date_offset;
-    
-    read(entity_count, data, cur);
-    read(data_offset, data, cur);
-    read(dynamic_date_offset, data, cur);
-
 #ifndef FLAG_RELEASE
+    uint32_t entity_count = 0;
+    read(entity_count, data, cur);
+
+    uint32_t data_offset;
+    read(data_offset, data, cur);
+
+    uint32_t ddata_offset;
+    read(ddata_offset, data, cur);
+
     if(cur != data_offset)
     {
-        msg::mtrs_error("Failed to load scene,",
-            " data_offset does not match the value ", data_offset);
+        msg::mtrs_error("Failed to load scene, ",
+            "data_offset does not match the value ", data_offset);
         return;
     }
-#endif
 
-    for(int i = 0; i < entity_count; i++)
+    for(int i = 0; i < entity_count && cur < ddata_offset; i++)
+#else
+    uint32_t data_offset, ddata_offset;
+    cur += 4;
+    read(data_offset, data, cur);
+    read(ddata_offset, data, cur);
+    while(cur < ddata_offset)
+#endif
     {
-        uint64_t id, offset;
+        uint64_t hash, offset;
         EntityID entity;
-        read(id, data, cur);
+        read(hash, data, cur);
         read(offset, data, cur);
         if(_freed_ids.empty())
         {
@@ -202,13 +210,15 @@ void ECSWorld::do_load(uint64_t tmp_hash, uint64_t scn_hash)
             entity = _freed_ids.top();
             _freed_ids.pop();
         }
-        scene_iter->second.local_entities.emplace(id, entity);
+        scene_iter->second.local_entities.emplace(hash, entity);
 
-        uint64_t id_comp;
+#ifndef FLAG_RELEASE
+        uint64_t ent_hash = hash;
+#endif
         while(cur < offset)
         {
-            read(id_comp, data, cur);
-            switch (id_comp)
+            read(hash, data, cur);
+            switch (hash)
             {
 #define X(Comp) case math::hash64_(#Comp): \
 { _components.add_comp<Comp>(entity, entity, scn_hash, tmp_hash, data + cur, file->deferred_data, *this, *_resources); \
@@ -217,12 +227,22 @@ cur += Comp::get_prs_size(); } break;
 #undef X
 #ifndef FLAG_RELEASE
             default:
-                msg::mtrs_error("Unknown component by id ", id_comp, ", in entity with id ", id);
+                msg::mtrs_error("Unknown component ", math::rehash64(hash),
+                    ", in entity \"", math::rehash64(hash), '"');
                 return;
 #endif
             }
         }
     }
+
+#ifndef FLAG_RELEASE
+    if(cur != ddata_offset)
+    {
+        msg::mtrs_error("Failed to load scene, ",
+            "ddata_offset does not match the value ", ddata_offset);
+        return;
+    }
+#endif
 }
 
 void ECSWorld::remove_scene(uint64_t scn_hash)
@@ -236,8 +256,8 @@ void ECSWorld::do_remove(uint64_t scn_hash)
 #ifndef FLAG_RELEASE
     if(iter == _scenes.end())
     {
-        msg::mtrs_error("Failed to remove scene,",
-            "there is no loaded scene named \"", math::rehash64(scn_hash), '"');
+        msg::mtrs_error("Failed to remove scene, ",
+            "unknown scene \"", math::rehash64(scn_hash), '"');
         return;
     }
 #endif
@@ -261,8 +281,8 @@ void ECSWorld::do_turn_on(uint64_t scn_hash)
 #ifndef FLAG_RELEASE
     if(iter == _scenes.end())
     {
-        msg::mtrs_error("Failed to turn on scene,",
-            " there is no loaded scene named \"", math::rehash64(scn_hash), '"');
+        msg::mtrs_error("Failed to turn on scene, ",
+            " unknown scene \"", math::rehash64(scn_hash), '"');
         return;
     }
 #endif
@@ -284,8 +304,8 @@ void ECSWorld::do_turn_off(uint64_t scn_hash)
 #ifndef FLAG_RELEASE
     if(iter == _scenes.end())
     {
-        msg::mtrs_error("Failed to turn off scene,",
-            " there is no loaded scene named \"", math::rehash64(scn_hash), '"');
+        msg::mtrs_error("Failed to turn off scene, ",
+            "unknown scene \"", math::rehash64(scn_hash), '"');
         return;
     }
 #endif
@@ -304,27 +324,29 @@ void ECSWorld::mark_destroy(EntityID entity)
 
 void ECSWorld::update(const double &delta)
 {
-    for(size_t i = 0; i < _pending_ops.size(); i++)
+    while(!_pending_ops.empty())
     {
-        auto &op = _pending_ops[i];
-        switch(op.op)
+        _buffer_ops = std::move(_pending_ops);
+        for(auto &op : _buffer_ops)
         {
-        case SceneOp::Load:
-            do_load(op.tmp_hash, op.scn_hash);
-            break;
-        case SceneOp::Remove:
-            do_remove(op.scn_hash);
-            break;
-        case SceneOp::TurnOn:
-            do_turn_on(op.scn_hash);
-            break;
-        case SceneOp::TurnOff:
-            do_turn_off(op.scn_hash);
-            break;
+            switch(op.op)
+            {
+            case SceneOp::Load:
+                do_load(op.tmp_hash, op.scn_hash);
+                break;
+            case SceneOp::Remove:
+                do_remove(op.scn_hash);
+                break;
+            case SceneOp::TurnOn:
+                do_turn_on(op.scn_hash);
+                break;
+            case SceneOp::TurnOff:
+                do_turn_off(op.scn_hash);
+                break;
+            }
         }
+        _buffer_ops.clear();
     }
-
-    _pending_ops.clear();
 
     for(auto &entity : _destroy_ids)
     {
@@ -356,28 +378,36 @@ void ECSWorld::clear_all()
     _file_manager.clear();
 }
 
-void *ECSWorld::single_comp(uint64_t hash_comp)
+void *ECSWorld::single_comp(uint64_t comp_hash)
 {
-    switch(hash_comp)
+    switch(comp_hash)
     {
 #define X(Comp) case math::hash64_(#Comp): \
 return _components.get_single_comp<Comp>();
         SINGLE_COMPONENT_TYPES
 #undef X
+        default:
+#ifndef FLAG_RELEASE
+            msg::mtrs_error("Unknown single component \"", math::rehash64(comp_hash), '"');
+#endif
+            return nullptr;
     }
-    return nullptr;
 }
 
-void *ECSWorld::component(uint64_t hash_comp, EntityID entity)
+void *ECSWorld::component(uint64_t comp_hash, EntityID entity)
 {
-    switch(hash_comp)
+    switch(comp_hash)
     {
 #define X(Comp) case math::hash64_(#Comp): \
 return _components.get_comp<Comp>(entity);
         COMPONENT_TYPES
 #undef X
+    default:
+#ifndef FLAG_RELEASE
+            msg::mtrs_error("Unknown single component \"", math::rehash64(comp_hash), '"');
+#endif
+            return nullptr;
     }
-    return nullptr;
 }
 
 EntityID ECSWorld::get_entity(uint64_t scn_hash, uint64_t ent_hash)
@@ -386,8 +416,8 @@ EntityID ECSWorld::get_entity(uint64_t scn_hash, uint64_t ent_hash)
 #ifndef FLAG_RELEASE
     if(scene_iter == _scenes.end())
     {
-        msg::mtrs_error("Failed to find entity,",
-            " there is no loaded scene named \"", math::rehash64(scn_hash), '"');
+        msg::mtrs_error("Failed to find entity, "
+            "unknown scene \"", math::rehash64(scn_hash), '"');
         return NULL_ENTITY;
     }
 #endif
@@ -396,9 +426,9 @@ EntityID ECSWorld::get_entity(uint64_t scn_hash, uint64_t ent_hash)
 #ifndef FLAG_RELEASE
     if(entity_iter == scene_iter->second.local_entities.end())
     {
-        msg::mtrs_error("Failed to find entity,",
-            " there is no entity with hash <", math::rehash64(ent_hash),
-            "> in the scene named \"", math::rehash64(scn_hash), '"');
+        msg::mtrs_error("Failed to find entity, "
+            "there is no entity \"", math::rehash64(ent_hash),
+            "\" in the scene \"", math::rehash64(scn_hash), '"');
         return NULL_ENTITY;
     }
 #endif
@@ -407,39 +437,51 @@ EntityID ECSWorld::get_entity(uint64_t scn_hash, uint64_t ent_hash)
 }
 
 bool ECSWorld::save_static_to_file(uint64_t scn_hash, uint64_t ent_hash,
-    uint64_t hash_comp, size_t field, void *new_data, size_t size)
+    uint64_t comp_hash, size_t field, void *new_data, size_t size)
 {
     auto scene_iter = _scenes.find(scn_hash);
+#ifndef FLAG_RELEASE
     if(scene_iter == _scenes.end())
     {
-#ifndef FLAG_RELEASE
-        msg::mtrs_warning("Unable to save the static data field to file\n",
-            "\tArgs: scene{", math::rehash64(scn_hash), "}, entity{", math::rehash64(ent_hash), "}");
-#endif
+        msg::mtrs_warning("Unable to save the static data field to file.\n\t"
+            "In unknown scene \"", math::rehash64(scn_hash), "\", "
+            "in entity \"", math::rehash64(ent_hash), '"');
         return false;
     }
+#endif
 
     auto file = open(scene_iter->second.tmp_hash);
+#ifndef FLAG_RELEASE
     if(!file) return false;
+#endif
 
     char *data = file->data.data();
     size_t cur = 16;
 
+#ifndef FLAG_RELEASE
     uint32_t entity_count = 0;
-    uint32_t data_offset;
-    uint32_t dynamic_offset;
-
     read(entity_count, data, cur);
-    read(data_offset, data, cur);
-    read(dynamic_offset, data, cur);
 
-    for(int i = 0; i < entity_count && cur < dynamic_offset; i++)
+    uint32_t data_offset;
+    read(data_offset, data, cur);
+
+    uint32_t ddata_offset;
+    read(ddata_offset, data, cur);
+
+    for(int i = 0; i < entity_count && cur < ddata_offset; i++)
+#else
+    uint32_t data_offset, ddata_offset;
+    cur += 4;
+    read(data_offset, data, cur);
+    read(ddata_offset, data, cur);
+    while(cur < ddata_offset)
+#endif
     {
-        uint64_t id, offset;
-        read(id, data, cur);
+        uint64_t hash, offset;
+        read(hash, data, cur);
         read(offset, data, cur);
 
-        if(id != ent_hash)
+        if(hash != ent_hash)
         {
             cur = offset;
         }
@@ -447,29 +489,31 @@ bool ECSWorld::save_static_to_file(uint64_t scn_hash, uint64_t ent_hash,
         {
             while(cur < offset)
             {
-                uint64_t id_comp;
-                read(id_comp, data, cur);
+                read(hash, data, cur);
 
-                if(id_comp == hash_comp)
+                if(hash != comp_hash)
+                {
+                    switch(hash)
+                    {
+#define X(Comp) case math::hash64_(#Comp): cur += Comp::get_prs_size(); break;
+                        COMPONENT_TYPES
+#undef X
+#ifndef FLAG_RELEASE
+                    default:
+                        msg::mtrs_warning("Unable to save the static data field to file.\n\t"
+                            "In scene \"", math::rehash64(scn_hash), "\", "
+                            "in entity \"", math::rehash64(ent_hash), "\" "
+                            "unknown component \"", math::rehash64(comp_hash), '"');
+                        return false;
+#endif
+                    }
+                }
+                else
                 {
                     cur += field;
                     std::memcpy(data + cur, new_data, size);
                     file->dirty = true;
                     return true;
-                }
-
-                switch(id_comp)
-                {
-#define X(Comp) case math::hash64_(#Comp): cur += Comp::get_prs_size(); break;
-                    COMPONENT_TYPES
-#undef X
-                default:
-#ifndef FLAG_RELEASE
-                    msg::mtrs_warning("Unable to save the static data field to file\n",
-                        "\tArgs: scene{", math::rehash64(scn_hash), "}, ent_hash{",
-                        math::rehash64(ent_hash), "}, unknown component id ", id_comp);
-#endif
-                    return false;
                 }
             }
             break;
@@ -477,47 +521,60 @@ bool ECSWorld::save_static_to_file(uint64_t scn_hash, uint64_t ent_hash,
     }
 
 #ifndef FLAG_RELEASE
-    msg::mtrs_warning("Unable to find and save the static data field to file\n",
-        "\tArgs: scene{", math::rehash64(scn_hash), "}, ent_hash{", math::rehash64(ent_hash), "}");
+    msg::mtrs_warning("Unable to find and save the static data field to file.\n\t"
+        "In scene \"", math::rehash64(scn_hash), "\", "
+        "in entity \"", math::rehash64(ent_hash), '"');
 #endif
 
     return false;
 }
 
 bool ECSWorld::save_dynamic_to_file(uint64_t scn_hash, uint64_t ent_hash,
-    uint64_t hash_comp, size_t field, void *new_data, size_t size)
+    uint64_t comp_hash, size_t field, void *new_data, size_t size)
 {
     auto scene_iter = _scenes.find(scn_hash);
+#ifndef FLAG_RELEASE
     if(scene_iter == _scenes.end())
     {
-#ifndef FLAG_RELEASE
-        msg::mtrs_warning("Unable to save the deferred data field to file\n",
-            "\tArgs: scene{", math::rehash64(scn_hash), "}, ent_hash{", math::rehash64(ent_hash), "}");
-#endif
-        return false;
+        msg::mtrs_warning("Unable to save the deferred data field to file.\n\t"
+            "In unknown scene \"", math::rehash64(scn_hash), "\", "
+            "in entity \"", math::rehash64(ent_hash), '"');
+            return false;
     }
+#endif
 
     auto file = open(scene_iter->second.tmp_hash);
+#ifndef FLAG_RELEASE
     if(!file) return false;
+#endif
 
     char *data = file->data.data();
     size_t cur = 16;
 
+#ifndef FLAG_RELEASE
     uint32_t entity_count = 0;
-    uint32_t data_offset;
-    uint32_t dynamic_offset;
-
     read(entity_count, data, cur);
-    read(data_offset, data, cur);
-    read(dynamic_offset, data, cur);
 
-    for(int i = 0; i < entity_count && cur < dynamic_offset; i++)
+    uint32_t data_offset;
+    read(data_offset, data, cur);
+
+    uint32_t ddata_offset;
+    read(ddata_offset, data, cur);
+
+    for(int i = 0; i < entity_count && cur < ddata_offset; i++)
+#else
+    uint32_t data_offset, ddata_offset;
+    cur += 4;
+    read(data_offset, data, cur);
+    read(ddata_offset, data, cur);
+    while(cur < ddata_offset)
+#endif
     {
-        uint64_t id, offset;
-        read(id, data, cur);
+        uint64_t hash, offset;
+        read(hash, data, cur);
         read(offset, data, cur);
 
-        if(id != ent_hash)
+        if(hash != ent_hash)
         {
             cur = offset;
         }
@@ -525,23 +582,23 @@ bool ECSWorld::save_dynamic_to_file(uint64_t scn_hash, uint64_t ent_hash,
         {
             while(cur < offset)
             {
-                uint64_t id_comp;
-                read(id_comp, data, cur);
+                read(hash, data, cur);
 
-                if(id_comp != hash_comp)
+                if(hash != comp_hash)
                 {
-                    switch(id_comp)
+                    switch(hash)
                     {
 #define X(Comp) case math::hash64_(#Comp): cur += Comp::get_prs_size(); break;
                         COMPONENT_TYPES
 #undef X
-                    default:
 #ifndef FLAG_RELEASE
-msg::mtrs_warning("Unable to save the deferred data field to file\n",
-                        "\tArgs: scene{", math::rehash64(scn_hash), "}, ent_hash{",
-                        math::rehash64(ent_hash), "}, unknown component id ", id_comp);
-#endif
+                    default:
+                        msg::mtrs_warning("Unable to save the deferred data field to file.\n\t"
+                            "In scene \"", math::rehash64(scn_hash), "\", "
+                            "in entity \"", math::rehash64(ent_hash), "\" "
+                            "unknown component \"", math::rehash64(comp_hash),'"');
                         return false;
+#endif
                     }
                 }
                 else
@@ -549,15 +606,15 @@ msg::mtrs_warning("Unable to save the deferred data field to file\n",
                     cur += field;
                     uint64_t *field_ptr = reinterpret_cast<uint64_t*>(data + cur);
                     auto iter = file->deferred_data.find(*field_ptr);
+#ifndef FLAG_RELEASE
                     if(iter == file->deferred_data.end())
                     {
-#ifndef FLAG_RELEASE
-                        msg::mtrs_warning("Unable to find the deferred data field to save in file\n",
-                            "\tArgs: scene{", math::rehash64(scn_hash), "}, ent_hash{",
-                            math::rehash64(ent_hash), "}");
-#endif
+                        msg::mtrs_warning("Unable to find the deferred data field to save in file.\n\t"
+                            "In scene \"", math::rehash64(scn_hash), "\", "
+                            "in entity \"", math::rehash64(ent_hash), '"');
                         return false;
                     }
+#endif
 
                     prs::DeferredData &ddata = iter->second;
 
@@ -577,8 +634,9 @@ msg::mtrs_warning("Unable to save the deferred data field to file\n",
     }
 
 #ifndef FLAG_RELEASE
-    msg::mtrs_warning("Unable to find and save the deferred data field to file\n",
-        "\tArgs: scene{", math::rehash64(scn_hash), "}, ent_hash{", math::rehash64(ent_hash), "}");
+    msg::mtrs_warning("Unable to find and save the deferred data field to file.\n\t"
+        "In scene \"", math::rehash64(scn_hash), "\", "
+        "in unknown entity \"", math::rehash64(ent_hash), '"');
 #endif
 
     return false;

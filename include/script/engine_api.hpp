@@ -57,6 +57,10 @@ namespace mtrs
 
         // util
         void (*message)(mtrs::msg::TypeMessage, const char *) = nullptr;
+        uint32_t (*save_hash32)(const char*, uint32_t) = nullptr;
+        uint64_t (*save_hash64)(const char*, uint64_t) = nullptr;
+        const char *(*rehash32)(uint32_t) = nullptr;
+        const char *(*rehash64)(uint64_t) = nullptr;
 
         // ECSWorld
         void (*world_load_scene)(comp::ECSWorld*, res::ResourceManager*, uint64_t, uint64_t) = nullptr;
@@ -120,24 +124,24 @@ typedef mtrs::comp::EntityID EntityID;
 
 namespace mtrs
 {
-    void load_scene(uint64_t template_hash, uint64_t instance_hash)
+    void load_scene(uint64_t tmp_hash, uint64_t scn_hash)
     {
-        api->world_load_scene(api->world, api->resource, template_hash, instance_hash);
+        api->world_load_scene(api->world, api->resource, tmp_hash, scn_hash);
     }
 
-    void remove_scene(uint64_t instance_hash)
+    void remove_scene(uint64_t scn_hash)
     {
-        api->world_remove_scene(api->world, instance_hash);
+        api->world_remove_scene(api->world, scn_hash);
     }
 
-    void turn_on_scene(uint64_t instance_hash)
+    void turn_on_scene(uint64_t scn_hash)
     {
-        api->world_turn_on_scene(api->world, instance_hash);
+        api->world_turn_on_scene(api->world, scn_hash);
     }
 
-    void turn_off_scene(uint64_t instance_hash)
+    void turn_off_scene(uint64_t scn_hash)
     {
-        api->world_turn_off_scene(api->world, instance_hash);
+        api->world_turn_off_scene(api->world, scn_hash);
     }
 
     template<typename Component, uint64_t Hash = math::hash64_(Component::get_type_name())>
@@ -176,7 +180,6 @@ namespace mtrs
     }
 }
 
-
 namespace mtrs::msg::detail
 {
 
@@ -184,6 +187,24 @@ void show_message(TypeMessage tmsg, std::string&& message)
 {
     api->message(tmsg, message.c_str());
 }
+
+}
+
+namespace mtrs::math
+{
+#ifndef FLAG_RELEASE
+namespace detail
+{
+    uint32_t save_hash32_to_map(std::string str, uint32_t hash) { return api->save_hash32(str.c_str(), hash); }
+    uint64_t save_hash64_to_map(std::string str, uint64_t hash) { return api->save_hash64(str.c_str(), hash); }
+}
+
+std::string rehash32(uint32_t hash) { return api->rehash32(hash); }
+std::string rehash64(uint64_t hash) { return api->rehash64(hash); }
+#endif
+
+uint32_t hash32(const std::string& str, uint32_t seed) { return hash32(str.data(), str.size(), seed); }
+uint64_t hash64(const std::string& str, uint64_t seed) { return hash64(str.data(), str.size(), seed); }
 
 }
 

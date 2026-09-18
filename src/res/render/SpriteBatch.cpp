@@ -46,7 +46,7 @@ SpriteBatch::SpriteBatch(SpriteBatch &&other) noexcept
     _vao = std::move(other._vao);
     instances = std::move(other.instances);
     layers = std::move(other.layers);
-    for(u_char i = 0; i < BUFFER_COUNT; i++)
+    for(uint8_t i = 0; i < BUFFER_COUNT; i++)
     {
         _instance_vbo[i] = std::move(other._instance_vbo[i]);
         _mapped_buffers[i] = other._mapped_buffers[i];
@@ -67,7 +67,7 @@ SpriteBatch &SpriteBatch::operator=(SpriteBatch &&other) noexcept
         _vao = std::move(other._vao);
         instances = std::move(other.instances);
         layers = std::move(other.layers);
-        for(u_char i = 0; i < BUFFER_COUNT; i++)
+        for(uint8_t i = 0; i < BUFFER_COUNT; i++)
         {
             _instance_vbo[i] = std::move(other._instance_vbo[i]);
             _mapped_buffers[i] = other._mapped_buffers[i];

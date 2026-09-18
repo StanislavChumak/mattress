@@ -35,7 +35,7 @@ public:
     ~Render() = default;
 
     void submit_batch(const std::shared_ptr<res::ShaderProgram> &shader,
-        const std::shared_ptr<res::Texture> &texture, float layer, std::vector<res::InstanceData> date);
+        const std::shared_ptr<res::Texture> &texture, float layer, std::vector<res::InstanceData> data);
     void draw();
 
     static constexpr const char *get_type_name_imp() noexcept { return "Render"; }

@@ -38,7 +38,9 @@ class ECSWorld
 
     std::unordered_map<uint64_t, std::string> _templates;
     std::unordered_map<uint64_t, Scene> _scenes;
+
     std::vector<SceneOperation> _pending_ops;
+    std::vector<SceneOperation> _buffer_ops;
 
     std::string _scenes_dir;
 

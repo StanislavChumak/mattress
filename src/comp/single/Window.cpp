@@ -6,6 +6,8 @@
 
 #include "util/fun/msg/mtrs_message.hpp"
 
+#include <string>
+
 namespace mtrs::comp
 {
 
@@ -25,8 +27,8 @@ void Window::set_icon(const char *const *paths, uint64_t count)
     int channels;
     for(size_t i = 0; i < count; i++)
     {
-        auto s = std::string(paths[i]);
-        if(s.substr(s.length() - 4) == ".png")
+        auto str = std::string(paths[i]);
+        if(str.substr(str.length() - 4) == ".png")
         {
             channels = 4;
         }

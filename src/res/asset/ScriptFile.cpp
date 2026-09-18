@@ -102,8 +102,14 @@ void ScriptFile::load(uint64_t scn_hash, comp::EntityID entity,
 #ifndef FLAG_RELEASE
     _api.message = [](msg::TypeMessage tmsg, const char *msg)
         { msg::detail::show_message(tmsg, msg); };
+
+    _api.save_hash32 = [](const char *s, uint32_t h) { return math::detail::save_hash32_to_map(s, h); };
+    _api.save_hash64 = [](const char *s, uint64_t h) { return math::detail::save_hash64_to_map(s, h); };
+
+    _api.rehash32 = [](uint32_t h) { return math::rehash32(h).c_str(); };
+    _api.rehash64 = [](uint64_t h) { return math::rehash64(h).c_str(); };
 #else
-    _api.message = [](mtrs::util::TypeMessage tmsg, const char *msg) {};
+    _api.message = [](msg::TypeMessage tmsg, const char *msg) {};
 #endif
 
     // ECSWorld
@@ -183,7 +189,7 @@ void *ScriptFile::get_symbol(const char *name)
         msg::mtrs_error("Failed to obtain \"", name,"\" due to: ", fs::get_last_error());
     }
     return symbol;
-#elif
+#else
     return fs::get_symbol(_handle, name);
 #endif
     
