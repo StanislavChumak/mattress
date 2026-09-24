@@ -6,16 +6,16 @@
 #include "comp/rendering/SpriteMap.hpp"
 #include "res/asset/TextureAtlas.hpp"
 
-typedef mtrs::comp::Sprite Sprite;
-typedef mtrs::comp::SpriteMap SpriteMap;
-typedef mtrs::res::TextureAtlas TextureAtlas;
-typedef mtrs::res::SubTexture SubTexture;
-
 extern mtrs::EngineAPI *api;
+
+namespace mtrs::res
+{
 
 SubTexture TextureAtlas::get_sub_texture(const size_t index) const
 {
     return api->atlas_get_sub_texture(this, index);
+}
+
 }
 
 #endif

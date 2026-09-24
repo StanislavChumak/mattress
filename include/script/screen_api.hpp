@@ -5,10 +5,10 @@
 #include "comp/single/Window.hpp"
 #include "comp/single/Camera.hpp"
 
-typedef mtrs::comp::Window Window;
-typedef mtrs::comp::Camera Camera;
-
 extern mtrs::EngineAPI *api;
+
+namespace mtrs::comp
+{
 
 void Window::set_icon(const char *const *paths, uint64_t count)
 {
@@ -53,6 +53,8 @@ void Camera::update_proj_matrix()
 void Camera::update_view_matrix()
 {
     api->camera_update_view_matrix(this);
+}
+
 }
 
 #endif

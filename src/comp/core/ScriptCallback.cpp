@@ -20,7 +20,6 @@ ScriptCallback::ScriptCallback(COMPONENT_ARGS)
     prs::set_mtrs_to_var(file_ddata[script.script_file], path);
 
     script_file = resource.get_resource<res::ScriptFile>(tmp_hash, path);
-    script_file->load(scn_hash, entity, world, resource);
 }
 
 uint32_t ScriptCallback::get_prs_size_imp() noexcept

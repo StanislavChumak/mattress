@@ -92,23 +92,6 @@ size_t ResourceManager::get_pos_resource(char *data, size_t end, const std::stri
 
 void ResourceManager::update(const double &delta)
 {
-    {\
-    auto &cache = get_cache<Texture>();\
-    for(auto it_keys = cache.keys.begin(); it_keys != cache.keys.end();)\
-    {\
-        auto it_map = cache.map.find(*it_keys);\
-        if(it_map->second.expired())\
-        {\
-           cache.map.erase(it_map);\
-           std::iter_swap(it_keys, cache.keys.end() - 1);\
-           cache.keys.pop_back();\
-        }\
-        else\
-        {\
-            it_keys++;\
-        }\
-    }\
-}
 #define X(Res)\
 {\
     auto &cache = get_cache<Res>();\

@@ -51,8 +51,8 @@ namespace mtrs
 {
     struct EngineAPI
     {
-        comp::ECSWorld *world;
-        res::ResourceManager *resource;
+        comp::ECSWorld *world = nullptr;
+        res::ResourceManager *resource = nullptr;
         uint64_t scn_hash = 0;
 
         // util
@@ -87,24 +87,24 @@ namespace mtrs
         void (*camera_update_view_matrix)(comp::Camera*) = nullptr;
 
         // GlyphDecoder
-        void (*decoder_submit_font)(comp::GlyphDecoder *, const char*);
-        res::Text (*decoder_decode_text)(comp::GlyphDecoder *, const char32_t*);
+        void (*decoder_submit_font)(comp::GlyphDecoder *, const char*) = nullptr;
+        res::Text (*decoder_decode_text)(comp::GlyphDecoder *, const char32_t*) = nullptr;
 
         // KeyButtons
-        void (*key_subscribe)(comp::KeyButtons*, int, bool, void(*)());
-        void (*key_unsubscribe)(comp::KeyButtons*, int, bool, void(*)());
+        void (*key_subscribe)(comp::KeyButtons*, int, bool, void(*)()) = nullptr;
+        void (*key_unsubscribe)(comp::KeyButtons*, int, bool, void(*)()) = nullptr;
 
         // MouseButtons
-        void (*mouse_subscribe)(comp::MouseButtons*, int, bool, void(*)());
-        void (*mouse_unsubscribe)(comp::MouseButtons*, int, bool, void(*)());
+        void (*mouse_subscribe)(comp::MouseButtons*, int, bool, void(*)()) = nullptr;
+        void (*mouse_unsubscribe)(comp::MouseButtons*, int, bool, void(*)()) = nullptr;
 
         // MouseScroll
-        void (*scroll_subscribe)(comp::MouseScroll*, void(*)());
-        void (*scroll_unsubscribe)(comp::MouseScroll*, void(*)());
+        void (*scroll_subscribe)(comp::MouseScroll*, void(*)()) = nullptr;
+        void (*scroll_unsubscribe)(comp::MouseScroll*, void(*)()) = nullptr;
 
         // Cursor
-        void (*cursor_subscribe)(comp::Cursor*, void(*)());
-        void (*cursor_unsubscribe)(comp::Cursor*, void(*)());
+        void (*cursor_subscribe)(comp::Cursor*, void(*)()) = nullptr;
+        void (*cursor_unsubscribe)(comp::Cursor*, void(*)()) = nullptr;
 
         // ScriptFile
         void *(*script_get_symbol)(res::ScriptFile*, const char*) = nullptr;
@@ -117,8 +117,6 @@ namespace mtrs
 #ifdef SCRIPT
 
 static mtrs::EngineAPI *api;
-
-typedef mtrs::comp::EntityID EntityID;
 
 #include "util/fun/math/hash.hpp"
 

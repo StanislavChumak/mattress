@@ -27,20 +27,8 @@ class ECSWorld
         bool turn_on = false;
     };
 
-    enum class SceneOp : uint8_t { Load, Remove, TurnOn, TurnOff };
-
-    struct SceneOperation
-    {
-        SceneOp op = SceneOp::Load;
-        uint64_t tmp_hash = 0;
-        uint64_t scn_hash = 0;
-    };
-
     std::unordered_map<uint64_t, std::string> _templates;
     std::unordered_map<uint64_t, Scene> _scenes;
-
-    std::vector<SceneOperation> _pending_ops;
-    std::vector<SceneOperation> _buffer_ops;
 
     std::string _scenes_dir;
 
@@ -53,11 +41,6 @@ class ECSWorld
     std::stack<EntityID> _freed_ids;
 
     prs::MtrsFileManager::MtrsFile *open(uint64_t tmp_hash);
-
-    void do_load(uint64_t tmp_hash, uint64_t scn_hash);
-    void do_remove(uint64_t scn_hash);
-    void do_turn_on(uint64_t scn_hash);
-    void do_turn_off(uint64_t scn_hash);
 
     ECSWorld(std::string scenes_dir, std::unordered_set<std::string> paths,
         uint64_t limit_size_cache);

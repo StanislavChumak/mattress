@@ -14,10 +14,12 @@ namespace mtrs::sys
 {
 
 std::vector<res::InstanceData> label_to_instances(const glm::mat4 &m, glm::vec2 &current_pos,
-    std::vector<mtrs::res::Glyph> glyphs, glm::highp_u8vec4 color)
+    const glm::uvec2 &text_size, std::vector<mtrs::res::Glyph> glyphs, glm::highp_u8vec4 color)
 {
     std::vector<res::InstanceData> data;
     res::InstanceData instance;
+
+    instance.position = glm::vec2(m[3].x, m[3].y);
 
     glm::vec2 scale;
     scale.x = glm::length(glm::vec2(m[0].x, m[0].y));
@@ -26,18 +28,20 @@ std::vector<res::InstanceData> label_to_instances(const glm::mat4 &m, glm::vec2 
     instance.rotation = std::atan2(m[0].y, m[0].x);
     instance.color = color;
     
-    data.assign(glyphs.size(), std::move(instance));
+    data.reserve(glyphs.size());
     
-    auto iter = data.begin();
+    res::InstanceData inst;
     for(auto &glyph : glyphs)
     {
-        iter->size = glyph.size * scale;
-        iter->position = current_pos;
-        iter->position += iter->size / 2.f;
+        if(current_pos.x > text_size.x) break;
+        inst = instance;
+        inst.size = glyph.size * scale;
+        inst.position.x += current_pos.x + inst.size.x / 2.f;
+        inst.position.y -= current_pos.y + inst.size.y / 2.f;
         current_pos.x += glyph.size.x + 1;
-        iter->lb_uv = glyph.sub_texture.lb_vertex;
-        iter->rt_uv = glyph.sub_texture.rt_vertex;
-        iter++;
+        inst.lb_uv = glyph.sub_texture.lb_vertex;
+        inst.rt_uv = glyph.sub_texture.rt_vertex;
+        data.push_back(std::move(inst));
     }
 
     return data;
@@ -50,12 +54,12 @@ void put_space(const glm::mat4 &m, glm::vec2 &current_pos,
     {
         switch (glyph.symbol)
         {
+        case '\n':
+            current_pos.x = 0;
+            current_pos.y += space_size.y + 1;
+            break;
         case ' ':
             current_pos.x += space_size.x;
-            break;
-        case '\n':
-            current_pos.x = m[3].x;
-            current_pos.y -= space_size.y + 1;
             break;
         case '\t':
             current_pos.x += space_size.x * 4;
@@ -77,19 +81,19 @@ void TextSubmitSystem::update_imp(comp::ECSWorld &world, const double &delta)
 
         const glm::mat4 &m = transform->matrix.get();
 
-        glm::vec2 current_pos(m[3].x,
-            m[3].y - label->text.space_size.y);
+        glm::vec2 current_pos{};
 
         for(auto sub_text : label->text.glyphs)
         {
-            if(!label->text.fonts[sub_text.first])
+            if(label->text.fonts[sub_text.first])
             {
-                put_space(m, current_pos, sub_text.second, label->text.space_size);
+                if(current_pos.x >= label->size.x || current_pos.y >= label->size.y) continue;
+                render->submit_batch(label->shader, label->text.fonts[sub_text.first]->texture, label->layer,
+                    label_to_instances(m, current_pos, label->size, sub_text.second, label->color));
             }
             else
             {
-                render->submit_batch(label->shader, label->text.fonts[sub_text.first]->texture,
-                    label->layer, label_to_instances(m, current_pos, sub_text.second, label->color));
+                put_space(m, current_pos, sub_text.second, label->text.space_size);
             }
         }
     }

@@ -1,6 +1,7 @@
 #include "comp/ECSWorld.hpp"
 
 #include "res/ResourceManager.hpp"
+#include "res/asset/ScriptFile.hpp"
 
 #include "comp/core/ScriptUpdate.hpp"
 #include "comp/core/ScriptCallback.hpp"
@@ -75,7 +76,6 @@ ECSWorld::ECSWorld(ECSWorld &&other) noexcept
 {
     _templates = std::move(other._templates);
     _scenes = std::move(other._scenes);
-    _pending_ops = std::move(other._pending_ops);
     _scenes_dir = std::move(other._scenes_dir);
     _resources = other._resources;
     _components = std::move(other._components);
@@ -89,7 +89,6 @@ ECSWorld &ECSWorld::operator=(ECSWorld &&other) noexcept
     {
         _templates = std::move(other._templates);
         _scenes = std::move(other._scenes);
-        _pending_ops = std::move(other._pending_ops);
         _scenes_dir = std::move(other._scenes_dir);
         _resources = other._resources;
         _components = std::move(other._components);
@@ -148,24 +147,22 @@ void ECSWorld::load_scene(uint64_t tmp_hash, uint64_t scn_hash)
         return;
     }
 #endif
-    _pending_ops.push_back({SceneOp::Load, tmp_hash, scn_hash});
-}
 
-void ECSWorld::do_load(uint64_t tmp_hash, uint64_t scn_hash)
-{
     auto file = open(tmp_hash);
 #ifndef FLAG_RELEASE
     if(!file) return;
 #endif
 
-    auto [scene_iter, inserted] = _scenes.try_emplace(scn_hash, Scene{tmp_hash, {}, true});
 #ifndef FLAG_RELEASE
+    auto [scene_iter, inserted] = _scenes.try_emplace(scn_hash, Scene{tmp_hash, {}, true});
     if(!inserted)
     {
         msg::mtrs_warning("Failed to load scene, "
             "there is already an scene named \"", math::rehash64(scn_hash), '"');
         return;
     }
+#else
+    _scenes.emplace(scn_hash, Scene{tmp_hash, {}, true});
 #endif
 
     char *data = file->data.data();
@@ -210,7 +207,7 @@ void ECSWorld::do_load(uint64_t tmp_hash, uint64_t scn_hash)
             entity = _freed_ids.top();
             _freed_ids.pop();
         }
-        scene_iter->second.local_entities.emplace(hash, entity);
+        _scenes[scn_hash].local_entities.emplace(hash, entity);
 
 #ifndef FLAG_RELEASE
         uint64_t ent_hash = hash;
@@ -221,10 +218,21 @@ void ECSWorld::do_load(uint64_t tmp_hash, uint64_t scn_hash)
             switch (hash)
             {
 #define X(Comp) case math::hash64_(#Comp): \
-{ _components.add_comp<Comp>(entity, entity, scn_hash, tmp_hash, data + cur, file->deferred_data, *this, *_resources); \
-cur += Comp::get_prs_size(); } break;
-            COMPONENT_TYPES
+_components.add_comp<Comp>(entity, entity, scn_hash, tmp_hash, data + cur, file->deferred_data, *this, *_resources); \
+cur += Comp::get_prs_size();
+    X(ScriptUpdate) _components.get_comp<ScriptUpdate>(entity)->script_file->load(scn_hash, entity, *this, *_resources); break;
+    X(ScriptCallback) _components.get_comp<ScriptCallback>(entity)->script_file->load(scn_hash, entity, *this, *_resources); break;
+    X(StoredData) break;
+    X(Transform) break;
+    X(Sprite) break;
+    X(Animator) break;
+    X(StateAnimator) break;
+    X(SpriteMap) break;
+    X(MapAnimator) break;
+    X(SoundPlayer) break;
+    X(Label) break;
 #undef X
+            
 #ifndef FLAG_RELEASE
             default:
                 msg::mtrs_error("Unknown component ", math::rehash64(hash),
@@ -247,11 +255,6 @@ cur += Comp::get_prs_size(); } break;
 
 void ECSWorld::remove_scene(uint64_t scn_hash)
 {
-    _pending_ops.push_back({SceneOp::Remove, 0, scn_hash});
-}
-
-void ECSWorld::do_remove(uint64_t scn_hash)
-{
     auto iter = _scenes.find(scn_hash);
 #ifndef FLAG_RELEASE
     if(iter == _scenes.end())
@@ -272,11 +275,6 @@ void ECSWorld::do_remove(uint64_t scn_hash)
 
 void ECSWorld::turn_on_scene(uint64_t scn_hash)
 {
-    _pending_ops.push_back({SceneOp::TurnOn, 0, scn_hash});
-}
-
-void ECSWorld::do_turn_on(uint64_t scn_hash)
-{
     auto iter = _scenes.find(scn_hash);
 #ifndef FLAG_RELEASE
     if(iter == _scenes.end())
@@ -294,11 +292,6 @@ void ECSWorld::do_turn_on(uint64_t scn_hash)
 }
 
 void ECSWorld::turn_off_scene(uint64_t scn_hash)
-{
-    _pending_ops.push_back({SceneOp::TurnOff, 0, scn_hash});
-}
-
-void ECSWorld::do_turn_off(uint64_t scn_hash)
 {
     auto iter = _scenes.find(scn_hash);
 #ifndef FLAG_RELEASE
@@ -324,30 +317,6 @@ void ECSWorld::mark_destroy(EntityID entity)
 
 void ECSWorld::update(const double &delta)
 {
-    while(!_pending_ops.empty())
-    {
-        _buffer_ops = std::move(_pending_ops);
-        for(auto &op : _buffer_ops)
-        {
-            switch(op.op)
-            {
-            case SceneOp::Load:
-                do_load(op.tmp_hash, op.scn_hash);
-                break;
-            case SceneOp::Remove:
-                do_remove(op.scn_hash);
-                break;
-            case SceneOp::TurnOn:
-                do_turn_on(op.scn_hash);
-                break;
-            case SceneOp::TurnOff:
-                do_turn_off(op.scn_hash);
-                break;
-            }
-        }
-        _buffer_ops.clear();
-    }
-
     for(auto &entity : _destroy_ids)
     {
 #define X(Comp) _components.remove_comp<Comp>(entity);
@@ -372,7 +341,6 @@ void ECSWorld::clear_all()
 
     _templates.clear();
     _scenes.clear();
-    _pending_ops.clear();
     _resources = nullptr;
 
     _file_manager.clear();

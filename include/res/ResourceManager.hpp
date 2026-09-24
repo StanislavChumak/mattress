@@ -73,7 +73,7 @@ public:
             if(it == _hash_packs.end())
             {
                 msg::mtrs_error("There is no pack named \"", math::rehash64(pack_hash),"\" in the ResourceManager");
-                pack = "null";
+                return std::shared_ptr<Resource>(nullptr);
             }
             else
 #endif
@@ -82,6 +82,7 @@ public:
             }
         }
         if(pack.find(_pack_dir) == 0) pack = pack.substr(_pack_dir.length());
+        if(pack == "null") return std::shared_ptr<Resource>(nullptr);
         auto &cache = get_cache<Resource>();
         std::string full_res_name = pack + '/' + resource_name;
         auto it_res = cache.map.find(full_res_name);
@@ -131,7 +132,7 @@ public:
             return resource;
         }
 #ifndef FLAG_RELEASE
-        if(pack != "null") msg::mtrs_error("No package named \"", pack,"\" found");
+        msg::mtrs_error("No package named \"", pack,"\" found");
 #endif
         return std::shared_ptr<Resource>(nullptr);
     }

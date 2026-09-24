@@ -7,12 +7,10 @@
 #include "comp/single/MouseScroll.hpp"
 #include "comp/single/Cursor.hpp"
 
-typedef mtrs::comp::KeyButtons KeyButtons;
-typedef mtrs::comp::MouseButtons MouseButtons;
-typedef mtrs::comp::MouseScroll MouseScroll;
-typedef mtrs::comp::Cursor Cursor;
-
 extern mtrs::EngineAPI *api;
+
+namespace mtrs::comp
+{
 
 void KeyButtons::subscribe(int key, bool action, void(*callback)())
 {
@@ -52,6 +50,8 @@ void Cursor::subscribe(void(*callback)())
 void Cursor::unsubscribe(void(*callback)())
 {
     api->cursor_unsubscribe(this, callback);
+}
+
 }
 
 #endif

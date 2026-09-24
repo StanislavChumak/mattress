@@ -8,11 +8,6 @@
 #include "comp/core/StoredData.hpp"
 #include "comp/core/Transform.hpp"
 
-typedef mtrs::comp::ScriptUpdate ScriptUpdate;
-typedef mtrs::comp::ScriptCallback ScriptCallback;
-typedef mtrs::comp::StoredData StoredData;
-typedef mtrs::comp::Transform Transform;
-
 extern mtrs::EngineAPI *api;
 
 namespace mtrs::res
@@ -23,11 +18,15 @@ namespace mtrs::res
     }
 }
 
+namespace mtrs::comp
+{
+
 template<typename Fun>
 Fun ScriptCallback::get_fun_script(const char *name)
 {
     return reinterpret_cast<Fun>(script_file->get_symbol(name));
 }
 
+}
 
 #endif
