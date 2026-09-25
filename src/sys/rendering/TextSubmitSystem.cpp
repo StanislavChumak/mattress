@@ -36,8 +36,7 @@ std::vector<res::InstanceData> label_to_instances(const glm::mat4 &m, glm::vec2 
         if(current_pos.x > text_size.x) break;
         inst = instance;
         inst.size = glyph.size * scale;
-        inst.position.x += current_pos.x + inst.size.x / 2.f;
-        inst.position.y -= current_pos.y + inst.size.y / 2.f;
+        inst.position += current_pos + inst.size / 2.f;
         current_pos.x += glyph.size.x + 1;
         inst.lb_uv = glyph.sub_texture.lb_vertex;
         inst.rt_uv = glyph.sub_texture.rt_vertex;
@@ -56,7 +55,7 @@ void put_space(const glm::mat4 &m, glm::vec2 &current_pos,
         {
         case '\n':
             current_pos.x = 0;
-            current_pos.y += space_size.y + 1;
+            current_pos.y -= space_size.y + 1;
             break;
         case ' ':
             current_pos.x += space_size.x;
@@ -81,7 +80,7 @@ void TextSubmitSystem::update_imp(comp::ECSWorld &world, const double &delta)
 
         const glm::mat4 &m = transform->matrix.get();
 
-        glm::vec2 current_pos{};
+        glm::vec2 current_pos{0, -float(label->text.space_size.y)};
 
         for(auto sub_text : label->text.glyphs)
         {

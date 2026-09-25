@@ -21,7 +21,7 @@ public:
     static comp::MouseScroll *mouse_scroll;
 
     static void update_imp(comp::ECSWorld &world, const double &delta);
-    static constexpr int get_prioritet_imp() { return SystemPriority::INPUT; }
+    static constexpr int get_prioritet_imp() { return SystemPriority::CLEANUP; }
     static constexpr const char *get_system_name_imp() { return "InputSystem"; }
 };
 
