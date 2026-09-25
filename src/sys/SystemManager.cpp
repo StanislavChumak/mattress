@@ -60,7 +60,7 @@ void SystemManager::rebuild_cache()
     std::sort(_cached_updates.begin(), _cached_updates.end(),
         [&](uint64_t a, uint64_t b)
         {
-            return _updates[a].first > _updates[b].first;
+            return _updates[a].first < _updates[b].first;
         });
 }
 

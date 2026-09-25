@@ -3,7 +3,25 @@
 #include <utility>
 
 const glm::mat4 *get_mat4(const void *self) { return static_cast<const glm::mat4*>(self);}
-bool update_mat4(void*) { return false; }
+
+bool update_mat4(void *self)
+{
+    static const glm::mat4 *last_mat4_ptr = nullptr;
+    static glm::mat4 last_mat4_value;
+    const auto *m = static_cast<const glm::mat4*>(self);
+    if (last_mat4_ptr != m)
+    {
+        last_mat4_ptr = m;
+        last_mat4_value = *m;
+        return true;
+    }
+    if (last_mat4_value != *m)
+    {
+        last_mat4_value = *m;
+        return true;
+    }
+    return false;
+}
 
 mtrs::react::PushNode<glm::mat4> mat4_to_node(glm::mat4 *m)
 {
