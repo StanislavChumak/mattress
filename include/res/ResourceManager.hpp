@@ -94,10 +94,6 @@ public:
                 return std::static_pointer_cast<Resource>(existing);
             }
         }
-        else
-        {
-            cache.keys.push_back(full_res_name);
-        }
 
         auto file = _file_manager.get_file(_pack_dir + pack + ".mtpck");
         if(file)
@@ -128,7 +124,11 @@ public:
                 return std::shared_ptr<Resource>(nullptr);
             }
 #endif
-            cache.map.emplace(full_res_name, std::weak_ptr<Resource>(resource));
+            cache.map[full_res_name] = std::weak_ptr<Resource>(resource);
+            if(it_res == cache.map.end())
+            {
+                cache.keys.push_back(full_res_name);
+            }
             return resource;
         }
 #ifndef FLAG_RELEASE

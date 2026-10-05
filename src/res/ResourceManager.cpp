@@ -98,7 +98,12 @@ void ResourceManager::update(const double &delta)
     for(auto it_keys = cache.keys.begin(); it_keys != cache.keys.end();)\
     {\
         auto it_map = cache.map.find(*it_keys);\
-        if(it_map->second.expired())\
+        if(it_map == cache.map.end())\
+        {\
+           std::iter_swap(it_keys, cache.keys.end() - 1);\
+           cache.keys.pop_back();\
+        }\
+        else if(it_map->second.expired())\
         {\
            cache.map.erase(it_map);\
            std::iter_swap(it_keys, cache.keys.end() - 1);\

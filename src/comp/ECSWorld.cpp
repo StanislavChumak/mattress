@@ -137,6 +137,37 @@ prs::MtrsFileManager::MtrsFile *ECSWorld::open(uint64_t tmp_hash)
     return file;
 }
 
+void ECSWorld::clear_all()
+{
+#define X(Comp) _components.clear_set<Comp>();
+    COMPONENT_TYPES
+#undef X
+#define X(Comp) _components.remove_single_comp<Comp>();
+    SINGLE_COMPONENT_TYPES
+#undef X
+
+    _templates.clear();
+    _scenes.clear();
+    _resources = nullptr;
+
+    _file_manager.clear();
+}
+
+void ECSWorld::update(const double &delta)
+{
+    for(auto &entity : _destroy_ids)
+    {
+#define X(Comp) _components.remove_comp<Comp>(entity);
+        COMPONENT_TYPES
+#undef X
+        _freed_ids.push(entity);
+    }
+
+    _destroy_ids.clear();
+
+    _file_manager.update(delta);
+}
+
 void ECSWorld::load_scene(uint64_t tmp_hash, uint64_t scn_hash)
 {
 #ifndef FLAG_RELEASE
@@ -315,35 +346,46 @@ void ECSWorld::mark_destroy(EntityID entity)
     _destroy_ids.push_back(entity);
 }
 
-void ECSWorld::update(const double &delta)
+EntityID ECSWorld::get_entity(uint64_t scn_hash, uint64_t ent_hash)
 {
-    for(auto &entity : _destroy_ids)
+    auto scene_iter = _scenes.find(scn_hash);
+#ifndef FLAG_RELEASE
+    if(scene_iter == _scenes.end())
     {
-#define X(Comp) _components.remove_comp<Comp>(entity);
-        COMPONENT_TYPES
-#undef X
-        _freed_ids.push(entity);
+        msg::mtrs_error("Failed to find entity, "
+            "unknown scene \"", math::rehash64(scn_hash), '"');
+        return NULL_ENTITY;
     }
+#endif
 
-    _destroy_ids.clear();
+    auto entity_iter = scene_iter->second.local_entities.find(ent_hash);
+#ifndef FLAG_RELEASE
+    if(entity_iter == scene_iter->second.local_entities.end())
+    {
+        msg::mtrs_error("Failed to find entity, "
+            "there is no entity \"", math::rehash64(ent_hash),
+            "\" in the scene \"", math::rehash64(scn_hash), '"');
+        return NULL_ENTITY;
+    }
+#endif
 
-    _file_manager.update(delta);
+    return entity_iter->second;
 }
 
-void ECSWorld::clear_all()
+uint64_t ECSWorld::get_scene_template(uint64_t scn_hash)
 {
-#define X(Comp) _components.clear_set<Comp>();
-    COMPONENT_TYPES
-#undef X
-#define X(Comp) _components.remove_single_comp<Comp>();
-    SINGLE_COMPONENT_TYPES
-#undef X
-
-    _templates.clear();
-    _scenes.clear();
-    _resources = nullptr;
-
-    _file_manager.clear();
+#ifndef FLAG_RELEASE
+    auto iter = _scenes.find(scn_hash);
+    if(iter == _scenes.end())
+    {
+        msg::mtrs_error("Failed to find scene template hash, "
+            "unknown scene \"", math::rehash64(scn_hash), '"');
+        return 0;
+    }
+    return iter->second.tmp_hash;
+#else
+    return _scenes.at(scn_hash).tmp_hash;
+#endif
 }
 
 void *ECSWorld::single_comp(uint64_t comp_hash)
@@ -376,32 +418,6 @@ return _components.get_comp<Comp>(entity);
 #endif
             return nullptr;
     }
-}
-
-EntityID ECSWorld::get_entity(uint64_t scn_hash, uint64_t ent_hash)
-{
-    auto scene_iter = _scenes.find(scn_hash);
-#ifndef FLAG_RELEASE
-    if(scene_iter == _scenes.end())
-    {
-        msg::mtrs_error("Failed to find entity, "
-            "unknown scene \"", math::rehash64(scn_hash), '"');
-        return NULL_ENTITY;
-    }
-#endif
-
-    auto entity_iter = scene_iter->second.local_entities.find(ent_hash);
-#ifndef FLAG_RELEASE
-    if(entity_iter == scene_iter->second.local_entities.end())
-    {
-        msg::mtrs_error("Failed to find entity, "
-            "there is no entity \"", math::rehash64(ent_hash),
-            "\" in the scene \"", math::rehash64(scn_hash), '"');
-        return NULL_ENTITY;
-    }
-#endif
-
-    return entity_iter->second;
 }
 
 bool ECSWorld::save_static_to_file(uint64_t scn_hash, uint64_t ent_hash,

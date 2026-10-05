@@ -10,12 +10,19 @@
 #include "comp/single/Cursor.hpp"
 
 #include "res/asset/TextureAtlas.hpp"
+#include "res/asset/ShaderProgram.hpp"
+#include "res/asset/Texture.hpp"
+#include "res/asset/Sound.hpp"
+#include "res/asset/Font.hpp"
+
+#include "res/ResourceManager.hpp"
 
 #include "util/fun/prs/mtrs_file.hpp"
 #include "util/fun/math/hash.hpp"
 #include "util/fun/msg/mtrs_message.hpp"
 
 #include "util/type/prs/res/ScriptFile.hpp"
+#include "util/type/prs/res/res_types.hpp"
 
 #include <cstring>
 
@@ -121,12 +128,14 @@ void ScriptFile::load(uint64_t scn_hash, comp::EntityID entity,
         { w->turn_on_scene(s); };
     _api.world_turn_off_scene = [](comp::ECSWorld*w, uint64_t s)
         { w->turn_off_scene(s); };
+    _api.world_get_entity = [](comp::ECSWorld*w, uint64_t s, uint64_t e)
+        { return w->get_entity(s, e); };
+    _api.world_get_scene_template = [](comp::ECSWorld*w, uint64_t s)
+        { return w->get_scene_template(s); };
     _api.world_single_comp = [](comp::ECSWorld*w, uint64_t c)
         { return w->single_comp(c); };
     _api.world_component = [](comp::ECSWorld*w, uint64_t c, comp::EntityID e)
         { return w->component(c, e); };
-    _api.world_get_entity = [](comp::ECSWorld*w, uint64_t s, uint64_t h)
-        { return w->get_entity(s, h); };
     _api.world_save_static = [](comp::ECSWorld*w, uint64_t s, uint64_t e, uint64_t c, uint64_t f, void*d, uint64_t sz)
         { return w->save_static_to_file(s, e, c, f, d, sz); };
     _api.world_save_dynamic = [](comp::ECSWorld*w, uint64_t s, uint64_t e, uint64_t c, uint64_t f, void*d, uint64_t sz)
@@ -147,7 +156,7 @@ void ScriptFile::load(uint64_t scn_hash, comp::EntityID entity,
 
     // glyph decoder
     _api.decoder_submit_font = [](comp::GlyphDecoder*d, const char*p){ d->submit_font(p); };
-    _api.decoder_decode_text = [](comp::GlyphDecoder*d, const char32_t*s){ return d->decode_text(s); };
+    _api.decoder_set_decode_text = [](comp::GlyphDecoder*d, res::Text*t, const char32_t*s){ return d->set_decode_text(*t, s); };
 
     // key buttons
     _api.key_subscribe = [](comp::KeyButtons*kb, int k, bool a, void (*c)()){ kb->subscribe(k, a, c); };
@@ -171,6 +180,28 @@ void ScriptFile::load(uint64_t scn_hash, comp::EntityID entity,
 
     // texture atlas
     _api.atlas_get_sub_texture = [](const res::TextureAtlas *a, size_t i){ return a->get_sub_texture(i); };
+
+    // resource manager
+    _api.res_set_slot = [](res::ResourceManager* rm, void* slot, uint64_t type_hash,
+        uint64_t pack_hash, const char* res_name) -> bool
+    {
+        switch (type_hash)
+        {
+#define X(Res)\
+        case math::hash64_(Res::get_type_name()):\
+            *reinterpret_cast<std::shared_ptr<res::Res>*>(slot) = \
+                rm->get_resource<res::Res>(pack_hash, res_name);\
+            break;
+        RESOURCE_TYPES
+#undef X
+#ifndef FLAG_RELEASE
+        default:
+            msg::mtrs_error("Unknown resource type for set_resource: ", math::rehash64(type_hash));
+            return false;
+#endif
+        }   
+        return true;
+    };
 
     _on_load(entity, &_api);
 }

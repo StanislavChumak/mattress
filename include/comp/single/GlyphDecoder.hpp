@@ -35,7 +35,7 @@ public:
 
     void submit_font(std::string path);
     std::pair<const std::string&, const res::Glyph&> glyph(char32_t symbol);
-    res::Text decode_text(std::u32string string);
+    bool set_decode_text(res::Text &target, std::u32string source);
 
     static constexpr const char *get_type_name_imp() noexcept { return "GlyphDecoder"; }
 };

@@ -67,9 +67,10 @@ namespace mtrs
         void (*world_remove_scene)(comp::ECSWorld*, uint64_t) = nullptr;
         void (*world_turn_on_scene)(comp::ECSWorld*, uint64_t) = nullptr;
         void (*world_turn_off_scene)(comp::ECSWorld*, uint64_t) = nullptr;
+        comp::EntityID (*world_get_entity)(comp::ECSWorld*, uint64_t, uint64_t) = nullptr;
+        uint64_t (*world_get_scene_template)(comp::ECSWorld*, uint64_t) = nullptr;
         void *(*world_single_comp)(comp::ECSWorld*, uint64_t) = nullptr;
         void *(*world_component)(comp::ECSWorld*, uint64_t, comp::EntityID) = nullptr;
-        comp::EntityID (*world_get_entity)(comp::ECSWorld*, uint64_t, uint64_t) = nullptr;
         bool (*world_save_static)(comp::ECSWorld*, uint64_t, uint64_t, uint64_t, uint64_t, void*, uint64_t) = nullptr;
         bool (*world_save_dynamic)(comp::ECSWorld*, uint64_t, uint64_t, uint64_t, uint64_t, void*, uint64_t) = nullptr;
 
@@ -88,7 +89,7 @@ namespace mtrs
 
         // GlyphDecoder
         void (*decoder_submit_font)(comp::GlyphDecoder *, const char*) = nullptr;
-        res::Text (*decoder_decode_text)(comp::GlyphDecoder *, const char32_t*) = nullptr;
+        bool (*decoder_set_decode_text)(comp::GlyphDecoder*, res::Text*, const char32_t*) = nullptr;
 
         // KeyButtons
         void (*key_subscribe)(comp::KeyButtons*, int, bool, void(*)()) = nullptr;
@@ -111,6 +112,9 @@ namespace mtrs
 
         // TextureAtlas
         res::SubTexture (*atlas_get_sub_texture)(const res::TextureAtlas*, size_t) = nullptr;
+
+        // ResourceManager
+        bool (*res_set_slot)(res::ResourceManager*, void*, uint64_t, uint64_t, const char*) = nullptr;
     };
 };
 
@@ -119,6 +123,8 @@ namespace mtrs
 static mtrs::EngineAPI *api;
 
 #include "util/fun/math/hash.hpp"
+
+#include <memory>
 
 namespace mtrs
 {
@@ -142,6 +148,16 @@ namespace mtrs
         api->world_turn_off_scene(api->world, scn_hash);
     }
 
+    comp::EntityID get_entity(uint64_t scn_hash, uint64_t ent_hash)
+    {
+        return api->world_get_entity(api->world, scn_hash, ent_hash);
+    }
+
+    uint64_t get_scene_template(uint64_t scn_hash)
+    {
+        return api->world_get_scene_template(api->world, scn_hash);
+    }
+
     template<typename Component, uint64_t Hash = math::hash64_(Component::get_type_name())>
     Component *get_single_comp()
     {
@@ -154,9 +170,11 @@ namespace mtrs
         return reinterpret_cast<Component*>(api->world_component(api->world, Hash, entity));
     }
 
-    comp::EntityID get_entity(uint64_t scn_hash, uint64_t ent_hash)
+    template<typename Res>
+    bool set_resource(std::shared_ptr<Res>& slot, uint64_t pack_hash, const char *res_name)
     {
-        return api->world_get_entity(api->world, scn_hash, ent_hash);
+        return api->res_set_slot(api->resource, &slot,
+            math::hash64_(Res::get_type_name()), pack_hash, res_name);
     }
 
     template<typename Component, typename T, uint64_t Hash = math::hash64_(Component::get_type_name())>

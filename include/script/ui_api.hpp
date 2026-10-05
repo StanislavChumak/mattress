@@ -16,9 +16,9 @@ void GlyphDecoder::submit_font(std::string path)
     api->decoder_submit_font(this, path.c_str());
 }
 
-res::Text GlyphDecoder::decode_text(std::u32string string)
+bool GlyphDecoder::set_decode_text(res::Text &target, std::u32string source)
 {
-    return api->decoder_decode_text(this, string.c_str());
+    return api->decoder_set_decode_text(this, &target, source.c_str());
 }
 
 }

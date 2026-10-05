@@ -28,7 +28,7 @@ Label::Label(COMPONENT_ARGS)
     
     prs::set_mtrs_to_var(file_ddata[label.text], str);
     auto decoder = static_cast<GlyphDecoder*>(world.single_comp(math::hash64(GlyphDecoder::get_type_name())));
-    text = decoder->decode_text(str::utf8_to_utf32(str));
+    decoder->set_decode_text(text, str::utf8_to_utf32(str));
 
     layer = label.layer;
 

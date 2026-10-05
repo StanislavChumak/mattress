@@ -82,6 +82,7 @@ public:
     void mark_destroy(EntityID entity);
 
     EntityID get_entity(uint64_t scn_hash, uint64_t ent_hash);
+    uint64_t get_scene_template(uint64_t scn_hash);
 
     void *single_comp(uint64_t comp_hash);
     void *component(uint64_t comp_hash, EntityID entity);

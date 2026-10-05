@@ -51,11 +51,11 @@ std::pair<const std::string&, const res::Glyph&> GlyphDecoder::glyph(char32_t sy
         {_fonts[iter->second.first], iter->second.second};
 }
 
-res::Text GlyphDecoder::decode_text(std::u32string string)
+bool GlyphDecoder::set_decode_text(res::Text &target, std::u32string source)
 {
     res::Text text;
-    if(string.empty()) return text;
-    text.string = std::move(string);
+    if(source.empty()) return false;
+    text.string = std::move(source);
 
     auto g = glyph(text.string[0]);
     text.fonts.push_back(_resources.get_resource<res::Font>(0, g.first));
@@ -94,7 +94,8 @@ res::Text GlyphDecoder::decode_text(std::u32string string)
         if(g.second.size.y > text.space_size.y) text.space_size.y = g.second.size.y;
     }
 
-    return text;
+    target = std::move(text);
+    return true;
 }
 
 }
