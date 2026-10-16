@@ -11,11 +11,13 @@
 namespace mtrs::comp
 {
 
-Window::Window(const glm::uvec2 &size, const char *name)
-: size(size), name(name)
+Window::Window(const std::string *executable_path)
+: size({ENGINE_WINDOW_SIZE_X * ENGINE_START_POINT_SIZE, ENGINE_WINDOW_SIZE_Y * ENGINE_START_POINT_SIZE})
+, name(ENGINE_WINDOW_NAME)
 , _monitor(glfwGetPrimaryMonitor())
 , _mode(glfwGetVideoMode(_monitor))
 , _buffer_position(0)
+, _executable_path(executable_path)
 {
 
 }
@@ -25,10 +27,11 @@ void Window::set_icon(const char *const *paths, uint64_t count)
     GLFWimage icon_window[count];
 
     int channels;
+    std::string path;
     for(size_t i = 0; i < count; i++)
     {
-        auto str = std::string(paths[i]);
-        if(str.substr(str.length() - 4) == ".png")
+        path = *_executable_path + std::string(paths[i]);
+        if(path.substr(path.length() - 4) == ".png")
         {
             channels = 4;
         }
@@ -36,7 +39,7 @@ void Window::set_icon(const char *const *paths, uint64_t count)
         {
             channels = 3;
         }
-        icon_window[i].pixels = stbi_load(paths[i],
+        icon_window[i].pixels = stbi_load(path.c_str(),
             &icon_window[i].width, &icon_window[i].height, &channels, 0);
 #ifndef FLAG_RELEASE
         if(!icon_window[i].pixels)
@@ -93,6 +96,7 @@ void Window::unsubscribe_to_size(void(*callback)())
         if(*iter == callback)
         {
             size_subscribers.erase(iter);
+            return;
         }
     }
 }

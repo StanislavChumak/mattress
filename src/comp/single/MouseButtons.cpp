@@ -32,6 +32,7 @@ void MouseButtons::unsubscribe(int button, bool action, void(*callback)())
             if(*iter == callback)
             {
                 vec.erase(iter);
+                return;
             }
         }
     }

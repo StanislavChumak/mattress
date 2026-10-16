@@ -23,4 +23,14 @@ bool GlyphDecoder::set_decode_text(res::Text &target, std::u32string source)
 
 }
 
+namespace mtrs::str
+{
+
+inline std::u32string utf8_to_utf32(std::string_view text)
+{
+    return api->utf8_to_utf32(static_cast<std::string>(text).c_str());
+}
+
+}
+
 #endif

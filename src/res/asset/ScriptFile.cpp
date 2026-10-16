@@ -20,6 +20,7 @@
 #include "util/fun/prs/mtrs_file.hpp"
 #include "util/fun/math/hash.hpp"
 #include "util/fun/msg/mtrs_message.hpp"
+#include "util/fun/str/utf8_to_utf32.hpp"
 
 #include "util/type/prs/res/ScriptFile.hpp"
 #include "util/type/prs/res/res_types.hpp"
@@ -118,6 +119,12 @@ void ScriptFile::load(uint64_t scn_hash, comp::EntityID entity,
 #else
     _api.message = [](msg::TypeMessage tmsg, const char *msg) {};
 #endif
+    _api.utf8_to_utf32 = [](const char *t) -> const char32_t *
+    {
+        static thread_local std::u32string buffer;
+        buffer = str::utf8_to_utf32(t);
+        return buffer.c_str();
+    };
 
     // ECSWorld
     _api.world_load_scene = [](comp::ECSWorld*w, res::ResourceManager*, uint64_t t, uint64_t i)

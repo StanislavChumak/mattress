@@ -14,6 +14,8 @@
 #include "sys/rendering/MapAnimatorSystem.hpp"
 #include "sys/rendering/TextSubmitSystem.hpp"
 
+#include "sys/audio/LocationAudioSystem.hpp"
+
 #include "util/fun/math/hash.hpp"
 #include "util/fun/msg/mtrs_message.hpp"
 
@@ -41,7 +43,9 @@ SystemManager::SystemManager()
         UPDATE_SYSTEM(StateAnimatorSystem),
         UPDATE_SYSTEM(SpriteMapSubmitSystem),
         UPDATE_SYSTEM(MapAnimatorSystem),
-        UPDATE_SYSTEM(TextSubmitSystem)
+        UPDATE_SYSTEM(TextSubmitSystem),
+
+        UPDATE_SYSTEM(LocationAudioSystem)
     };
 #undef UPDATE_SYSTEM
 }

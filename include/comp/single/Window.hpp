@@ -32,6 +32,8 @@ private:
 
     glm::ivec2 _buffer_position;
     glm::ivec2 _buffer_size;
+
+    const std::string *_executable_path = nullptr;
     
 public:
     const char *name;
@@ -44,7 +46,7 @@ public:
     Window(Window&&) = delete;
     Window &operator=(Window&&) = delete;
     
-    Window(const glm::uvec2 &size, const char *name);
+    Window(const std::string *executable_path);
     ~Window() = default;
 
     void set_icon(const char *const*paths, uint64_t count);

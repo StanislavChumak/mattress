@@ -69,6 +69,7 @@ void Cursor::unsubscribe(void(*callback)())
         if(*iter == callback)
         {
             subscribers.erase(iter);
+            return;
         }
     }
 }

@@ -17,9 +17,8 @@
 namespace mtrs::res
 {
 
-ResourceManager::ResourceManager(std::string pack_dir, std::unordered_set<std::string> paths,
-    uint64_t limit_size_cache)
-: _file_manager(paths, limit_size_cache)
+ResourceManager::ResourceManager(std::string pack_dir, std::unordered_set<std::string> paths)
+: _file_manager(paths, ENGINE_PACKS_CACHE_LIMIT)
 , _pack_dir(std::move(pack_dir))
 {
     std::string name;
@@ -30,8 +29,8 @@ ResourceManager::ResourceManager(std::string pack_dir, std::unordered_set<std::s
     }
 }
 
-ResourceManager::ResourceManager(std::string pack_dir, uint64_t limit_size_cache)
-: ResourceManager(pack_dir, fs::get_files_from_folder(pack_dir, ".mtpck"), limit_size_cache)
+ResourceManager::ResourceManager(std::string pack_dir)
+: ResourceManager(pack_dir, fs::get_files_from_folder(pack_dir, ".mtpck"))
 {
 }
 

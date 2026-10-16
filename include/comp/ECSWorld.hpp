@@ -42,11 +42,10 @@ class ECSWorld
 
     prs::MtrsFileManager::MtrsFile *open(uint64_t tmp_hash);
 
-    ECSWorld(std::string scenes_dir, std::unordered_set<std::string> paths,
-        uint64_t limit_size_cache);
+    ECSWorld(std::string scenes_dir, std::unordered_set<std::string> paths);
 
 public:
-    ECSWorld(std::string scenes_dir, uint64_t limit_size_cache);
+    ECSWorld(std::string scenes_dir);
     
     ECSWorld() = delete;
     ECSWorld(ECSWorld &) = delete;

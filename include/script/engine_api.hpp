@@ -8,6 +8,12 @@
 #endif
 
 #if defined(_WIN32)
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
     #include <windows.h>
     #define EXPORT __declspec(dllexport)
 #else
@@ -57,6 +63,7 @@ namespace mtrs
 
         // util
         void (*message)(mtrs::msg::TypeMessage, const char *) = nullptr;
+        const char32_t *(*utf8_to_utf32)(const char*) = nullptr;
         uint32_t (*save_hash32)(const char*, uint32_t) = nullptr;
         uint64_t (*save_hash64)(const char*, uint64_t) = nullptr;
         const char *(*rehash32)(uint32_t) = nullptr;

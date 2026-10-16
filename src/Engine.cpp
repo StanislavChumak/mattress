@@ -7,7 +7,6 @@
 #include "comp/single/Render.hpp"
 #include "comp/single/GlyphDecoder.hpp"
 #include "comp/single/Audio.hpp"
-#include "comp/single/States.hpp"
 #include "comp/single/Cursor.hpp"
 #include "comp/single/KeyButtons.hpp"
 #include "comp/single/MouseButtons.hpp"
@@ -27,18 +26,11 @@
 
 namespace mtrs::engine
 {
-
-Core::Core(const Config& config)
-: resources(config.executable_path + config.pack_dir, config.packs_cache_limit)
-, world(config.executable_path + config.scene_dir, config.scenes_cache_limit)
+Core::Core(const std::string& executable_path)
+: resources(executable_path + ENGINE_PACK_DIR)
+, world(executable_path + ENGINE_SCENE_DIR)
 {
     world.set_resources(&resources);
-#ifndef FLAG_RELEASE
-    if(!config.fixed_horizontal && !config.fixed_vertical)
-    {
-        msg::mtrs_error("Only one side can be non-fixed, correct the configuration");
-    }
-#endif
 
     if (!glfwInit())
     {
@@ -51,7 +43,7 @@ Core::Core(const Config& config)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    _window = world.init_single_comp<comp::Window>(config.size_in_points * config.start_point_size, config.name_window.c_str());
+    _window = world.init_single_comp<comp::Window>(&executable_path);
     const glm::uvec2 &window_size = _window->size.get();
 
     _window->poiter = glfwCreateWindow(window_size.x, window_size.y, _window->name, nullptr, nullptr);
@@ -92,9 +84,7 @@ Core::Core(const Config& config)
 
     glfwSwapInterval(0);
 
-    _states = world.init_single_comp<comp::States>(config.init_state);
-    _camera = world.init_single_comp<comp::Camera>(_window, glm::bvec2{config.fixed_horizontal,
-        config.fixed_vertical}, config.size_in_points);
+    _camera = world.init_single_comp<comp::Camera>(_window);
     _cursor = world.init_single_comp<comp::Cursor>(_camera);
     _keyboard = world.init_single_comp<comp::KeyButtons>();
     _mouse = world.init_single_comp<comp::MouseButtons>();
@@ -109,7 +99,7 @@ Core::Core(const Config& config)
     comp::Audio *audio = world.init_single_comp<comp::Audio>();
     if(audio)
     {
-        audio->sound_scale = config.saund_location_scale;
+        audio->sound_scale = ENGINE_SOUND_LOCATION_SCALE;
 #ifndef FLAG_RELEASE
         if(!audio->is_init)
         {
@@ -120,11 +110,11 @@ Core::Core(const Config& config)
 #endif
     }
     
-    if(!config.display_cursor) glfwSetInputMode(_window->poiter, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    if(!ENGINE_DISPLAY_CURSOR) glfwSetInputMode(_window->poiter, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
-    glClearColor(config.clear_color[0], config.clear_color[1], config.clear_color[2], config.clear_color[3]);
+    glClearColor(ENGINE_CLEAR_COLOR_R, ENGINE_CLEAR_COLOR_G, ENGINE_CLEAR_COLOR_B, ENGINE_CLEAR_COLOR_A);
     
-    if(config.blend) { glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);}
+    if(ENGINE_BLEND) { glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);}
 
     world.init_single_comp<comp::GlyphDecoder>(resources);
 
@@ -142,12 +132,15 @@ Core::Core(const Config& config)
 
     sys::CameraSystem::camera = _camera;
 
-    _window->set_icon(config.icon_window.data(), config.icon_window.size());
+#if ENGINE_ICON_COUNT != 0
+    const char *icon_paths[ENGINE_ICON_COUNT] = {ENGINE_ICON_PATHS};
+    _window->set_icon(icon_paths, ENGINE_ICON_COUNT);
+#endif
 
-    _time_frame = std::chrono::duration<double>(1.0 / config.max_fps);
+    _time_frame = std::chrono::duration<double>(1.0 / ENGINE_MAX_FPS);
 
 #ifndef FLAG_RELEASE
-    if(config.start_scene == "")
+    if(ENGINE_START_SCENE[0] == '\0')
     {
         msg::mtrs_warning("You need to select the starting scene ",
             "in the configuration via the \"start_scene\" parameter");
@@ -155,7 +148,7 @@ Core::Core(const Config& config)
     else
 #endif
     {
-        world.load_scene(math::hash64(config.start_scene), math::hash64("start_scene"));
+        world.load_scene(math::hash64(ENGINE_START_SCENE), math::hash64("start_scene"));
     }
     
     _is_init = true;
@@ -212,16 +205,13 @@ void window_size_callback(GLFWwindow *window, int width, int height)
     if (core)
     {
         core->_window->size.set({width, height});
-        if(!core->_camera->fixed_sides.y)
-        {
-            core->_camera->size_in_points.set_field(&glm::uvec2::y,
-                height / (width / (double)core->_camera->size_in_points->x));
-        }
-        else if(!core->_camera->fixed_sides.x)
-        {
-            core->_camera->size_in_points.set_field(&glm::uvec2::x,
-                width / (height / (double)core->_camera->size_in_points->y));
-        }
+#if !ENGINE_FIXED_VERTICAL
+        core->_camera->size_in_points.set_field(&glm::uvec2::y,
+            height / (width / (double)core->_camera->size_in_points->x));
+#elif !ENGINE_FIXED_HORIZONTAL
+        core->_camera->size_in_points.set_field(&glm::uvec2::x,
+            width / (height / (double)core->_camera->size_in_points->y));
+#endif
         core->_camera->viewport.update();
         core->_camera->update_proj_matrix();
         core->_input_callbacks.reserve(core->_input_callbacks.size() +

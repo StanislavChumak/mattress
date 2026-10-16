@@ -38,11 +38,10 @@ private:
         return wrapper;
     }
 
-    ResourceManager(std::string pack_dir, std::unordered_set<std::string> paths,
-        uint64_t limit_size_cache);
+    ResourceManager(std::string pack_dir, std::unordered_set<std::string> paths);
 
 public:
-    ResourceManager(std::string pack_dir, uint64_t limit_size_cache);
+    ResourceManager(std::string pack_dir);
 
     ResourceManager() = delete;
     ResourceManager(ResourceManager &) = delete;

@@ -20,7 +20,6 @@
 
 #include "comp/single/Window.hpp"
 #include "comp/single/Camera.hpp"
-#include "comp/single/States.hpp"
 #include "comp/single/Render.hpp"
 #include "comp/single/GlyphDecoder.hpp"
 #include "comp/single/Audio.hpp"
@@ -40,7 +39,6 @@
 #define SINGLE_COMPONENT_TYPES \
 X(Window)\
 X(Camera)\
-X(States)\
 X(Render)\
 X(GlyphDecoder)\
 X(Audio)\
@@ -53,9 +51,8 @@ X(MouseScroll)
 namespace mtrs::comp
 {
 
-ECSWorld::ECSWorld(std::string scenes_dir, std::unordered_set<std::string> paths,
-    uint64_t limit_size_cache)
-: _file_manager(paths, limit_size_cache), _scenes_dir(std::move(scenes_dir))
+ECSWorld::ECSWorld(std::string scenes_dir, std::unordered_set<std::string> paths)
+: _file_manager(paths, ENGINE_SCENES_CACHE_LIMIT), _scenes_dir(std::move(scenes_dir))
 {
     _templates.reserve(paths.size());
     std::string name;
@@ -66,8 +63,8 @@ ECSWorld::ECSWorld(std::string scenes_dir, std::unordered_set<std::string> paths
     }
 }
 
-ECSWorld::ECSWorld(std::string scenes_dir, uint64_t limit_size_cache)
-: ECSWorld(scenes_dir, fs::get_files_from_folder(scenes_dir, ".mtscn"), limit_size_cache)
+ECSWorld::ECSWorld(std::string scenes_dir)
+: ECSWorld(scenes_dir, fs::get_files_from_folder(scenes_dir, ".mtscn"))
 {
 }
 

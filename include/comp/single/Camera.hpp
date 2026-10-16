@@ -40,15 +40,13 @@ public:
 
     const glm::mat4 *target_matrix = nullptr;
 
-    const glm::bvec2 fixed_sides;
-
     Camera() = delete;
     Camera(const Camera &) = delete;
     Camera &operator=(const Camera&) = delete;
     Camera(Camera&&) = delete;
     Camera &operator=(Camera&&) = delete;
     
-    Camera(Window *window, glm::bvec2 fixed_sides, glm::uvec2 size_in_points);
+    Camera(Window *window);
     ~Camera() = default;
 
     void update_UBO();
