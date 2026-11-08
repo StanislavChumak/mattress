@@ -9,7 +9,6 @@
 
 #include <vector>
 #include <unordered_map>
-#include <memory>
 
 namespace mtrs::res
 {
@@ -26,19 +25,13 @@ struct InstanceData
 
 class SpriteBatch
 {
-    static constexpr uint8_t BUFFER_COUNT = 3;
-
     VertexArrayObject _vao;
+    BufferObject _instance_vbo;
 
-    BufferObject _instance_vbo[BUFFER_COUNT];
-    InstanceData* _mapped_buffers[BUFFER_COUNT] = {nullptr}; 
-    GLsync _fences[BUFFER_COUNT] = {0};
-    uint8_t _current_buffer_index = 0;
-    
     uint32_t _shader;
     uint32_t _texture;
     uint64_t _max_instances;
-    
+
 public:
     std::unordered_map<float, std::vector<InstanceData>> instances;
     std::vector<float> layers;

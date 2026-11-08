@@ -12,6 +12,10 @@ namespace mtrs::comp
 
 Render::Render()
 {
+    GLuint setup_vao = 0;
+    glGenVertexArrays(1, &setup_vao);
+    glBindVertexArray(setup_vao);
+
     const float quad[] = {
         -0.5f, -0.5f,  0.0f, 0.0f,
          0.5f, -0.5f,  1.0f, 0.0f,
@@ -22,6 +26,9 @@ Render::Render()
     
     const GLuint indices[] = {0, 1, 2, 2, 3, 0};
     _quad_EBO.init(GL_ELEMENT_ARRAY_BUFFER, indices, sizeof(indices), GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+    glDeleteVertexArrays(1, &setup_vao);
 }
 
 void Render::submit_batch(const std::shared_ptr<res::ShaderProgram> &shader,

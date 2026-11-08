@@ -5,6 +5,7 @@
 #include "res/render/SpriteBatch.hpp"
 
 #include <unordered_map>
+#include <memory>
 
 namespace mtrs::res
 {

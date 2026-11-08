@@ -120,6 +120,25 @@ ShaderProgram::ShaderProgram(RESOURCE_ARGS)
     }
     glDeleteShader(vertex_id);
     glDeleteShader(fragment_id);
+
+    if (_is_compiled)
+    {
+        GLuint world_block = glGetUniformBlockIndex(_ID, "GlobalMatrices");
+        if (world_block != GL_INVALID_INDEX)
+        {
+            glUniformBlockBinding(_ID, world_block, 0);
+        }
+
+        GLuint ui_block = glGetUniformBlockIndex(_ID, "UiMatrices");
+        if (ui_block != GL_INVALID_INDEX)
+        {
+            glUniformBlockBinding(_ID, ui_block, 1);
+        }
+
+        glUseProgram(_ID);
+        glUniform1i(glGetUniformLocation(_ID, "textureData"), 0);
+        glUseProgram(0);
+    }
 }
 
 

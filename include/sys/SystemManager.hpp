@@ -14,7 +14,6 @@ namespace mtrs::sys
 
 class SystemManager
 {
-private:
     using Update = void(*)(comp::ECSWorld&, const double&);
     std::unordered_map<uint64_t, std::pair<int, Update>> _updates;
     std::unordered_set<uint64_t> _disabled_systems;
@@ -22,6 +21,7 @@ private:
     void rebuild_cache();
     std::vector<uint64_t> _cached_updates;
     bool _cache_dirty;
+
 public:
     SystemManager();
 
@@ -36,18 +36,6 @@ public:
         _updates[HASH64S(System::get_system_name())] = {System::get_prioritet(), System::update};
         _cache_dirty = true;
     }
-    template<typename System> void register_always_update()
-    {
-        _updates[HASH64S(System::get_system_name())] = {System::get_prioritet(), System::update};
-        _cache_dirty = true;
-    }
-
-    template<typename System> void turn_on_system()
-    { turn_on_system(math::hash64(System::get_system_name())); }
-    template<typename System> void turn_off_system()
-    { turn_off_system(math::hash64(System::get_system_name())); }
-    template<typename System> bool is_turn_on_system()
-    { return is_turn_on_system(math::hash64(System::get_system_name())); }
 };
 
 }

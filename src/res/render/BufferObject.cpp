@@ -8,8 +8,9 @@ namespace mtrs::res
 {
 
 BufferObject::BufferObject()
+: _id(0), _mode(0)
 {
-    glCreateBuffers(1, &_id);
+    glGenBuffers(1, &_id);
 }
 
 BufferObject::~BufferObject() noexcept
@@ -43,7 +44,8 @@ void BufferObject::init(const uint32_t &mode, const void *data,
     const int64_t size, const uint32_t usage)
 {
     _mode = mode;
-    glNamedBufferData(_id, size, data, usage);
+    glBindBuffer(_mode, _id);
+    glBufferData(_mode, size, data, usage);
 }
 
 void BufferObject::update(const void *data, const int64_t size, const int64_t offset) const
@@ -55,7 +57,8 @@ void BufferObject::update(const void *data, const int64_t size, const int64_t of
         return;
     }
 #endif
-    glNamedBufferSubData(_id, offset, size, data);
+    glBindBuffer(_mode, _id);
+    glBufferSubData(_mode, offset, size, data);
 }
 
 void BufferObject::bind() const

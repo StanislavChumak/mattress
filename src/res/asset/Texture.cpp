@@ -28,9 +28,6 @@ Texture::Texture(RESOURCE_ARGS)
     _max_instances = texture.max_instances;
 
     _number = 0;
-    // auto resultInt = obj["number"].get_int64();
-    // if(!resultInt.error())
-    //     _number = resultInt.value();
 
     stbi_set_flip_vertically_on_load(true);
 

@@ -6,8 +6,9 @@ namespace mtrs::res
 {
 
 VertexArrayObject::VertexArrayObject()
+: _id(0)
 {
-    glCreateVertexArrays(1, &_id);
+    glGenVertexArrays(1, &_id);
 }
 
 VertexArrayObject::~VertexArrayObject() noexcept
@@ -34,26 +35,36 @@ VertexArrayObject &VertexArrayObject::operator=(VertexArrayObject &&other) noexc
     return *this;
 }
 
-void VertexArrayObject::add_attrib_float(GLuint attrib_index, GLuint binding_index,
-    GLint size, GLintptr rel_offset)
+void VertexArrayObject::add_attrib_float(GLuint attrib_index,
+    GLint size, GLsizei stride, GLintptr rel_offset)
 {
-    glEnableVertexArrayAttrib(_id, attrib_index);
-    glVertexArrayAttribBinding(_id, attrib_index, binding_index);
-    glVertexArrayAttribFormat(_id, attrib_index, size, GL_FLOAT, GL_FALSE, rel_offset);
+    glEnableVertexAttribArray(attrib_index);
+    glVertexAttribPointer(attrib_index, size, GL_FLOAT, GL_FALSE, stride,
+        reinterpret_cast<const void *>(rel_offset));
 }
 
-void VertexArrayObject::add_attrib_byteN(GLuint attrib_index, GLuint binding_index,
-    GLint size, GLintptr rel_offset)
+void VertexArrayObject::add_attrib_byteN(GLuint attrib_index,
+    GLint size, GLsizei stride, GLintptr rel_offset)
 {
-    glEnableVertexArrayAttrib(_id, attrib_index);
-    glVertexArrayAttribBinding(_id, attrib_index, binding_index);
-    glVertexArrayAttribFormat(_id, attrib_index, size, GL_UNSIGNED_BYTE, GL_TRUE, rel_offset);
+    glEnableVertexAttribArray(attrib_index);
+    glVertexAttribPointer(attrib_index, size, GL_UNSIGNED_BYTE, GL_TRUE, stride,
+        reinterpret_cast<const void *>(rel_offset));
 }
 
-void VertexArrayObject::set_vertex_buffer(GLuint binding_index, const BufferObject &buffer,
-    GLsizei stride, GLintptr offset)
+void VertexArrayObject::set_divisor(GLuint attrib_index, GLuint divisor)
 {
-    glVertexArrayVertexBuffer(_id, binding_index, buffer.id(), offset, stride);
+    glVertexAttribDivisor(attrib_index, divisor);
+}
+
+void VertexArrayObject::set_vertex_buffer(const BufferObject &buffer)
+{
+    buffer.bind();
+}
+
+void VertexArrayObject::set_index_buffer(const BufferObject &buffer)
+{
+    glBindVertexArray(_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.id());
 }
 
 void VertexArrayObject::bind() const
